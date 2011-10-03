@@ -80,6 +80,7 @@ class UserManagement(Frame):
 class Administration(Toplevel):
     def __init__(self, master=None):
         Toplevel.__init__(self, master)
+        self.resizable(False, False)
         self.build()
         self.arrange()
         
