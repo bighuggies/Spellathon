@@ -6,6 +6,41 @@ Created on 23/09/2011
 from Tkinter import *
 import os
 
+class TabBar(Frame):
+    def __init__(self, master=None, tabs=None):
+        Frame.__init__(self, master)
+        
+        
+        self.tabs = tabs
+        self.tab_var = StringVar()
+        self.tab_buttons = []
+        
+        self.build()
+        self.arrange()
+        
+    def build(self):
+        self.tab_frame = Frame(self)
+        
+        for name in self.tabs.iterkeys():
+            self.tab_buttons.append(Radiobutton(self.tab_frame, text=name,
+                                                variable=self.tab_var,
+                                                value=name, indicatoron=0,
+                                                command = self.switch_tab))
+        
+    def arrange(self):
+        self.tab_frame.grid(row=0, column=0)
+        
+        for i, button in enumerate(self.tab_buttons):
+            button.grid(column=i, row=0)
+            
+    def switch_tab(self):
+        newtab = self.tab_var.get()
+        
+        for tab in self.tabs.itervalues():
+            tab.grid_forget()
+            
+        self.tabs[newtab].grid(column=0,row=1)
+
 class MultiScrollListbox(Frame):
     def __init__(self, master=None, items=None):
         Frame.__init__(self, master)

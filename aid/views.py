@@ -4,10 +4,55 @@ Created on Sep 29, 2011
 @author: ahug048
 '''
 from Tkinter import *
-from widgets import Dialog, ScrollListbox
+from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox
 
 pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
+
+class UserManagement(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.build()
+        self.arrange()
+        
+    def build(self):
+        #####
+        items = []
+    
+        for i in range(1,50):
+            items.append((i, i, i))
+        #####
+        
+        self.user_lbx = MultiScrollListbox(self, items)
+        self.new_user_btn = Button(self, text="New user")
+        self.delete_user_btn = Button(self, text="Delete user")
+        self.edit_user_btn = Button(self, text="Edit user")
+        self.user_score_btn = Button(self, text="View scores")
+
+    def arrange(self):
+        a=0
+        
+class Administration(Toplevel):
+    def __init__(self, master=None):
+        Toplevel.__init__(self, master)
+        self.build()
+        self.arrange()
+        
+    def build(self):
+        #####
+        lol = Frame(self)
+        rofl = Label(lol, text="rofl")
+        rofl.pack()
+        
+        lol2 = Logon(self)
+        
+        rofl = {"One": lol, "Two": lol2}
+        ######
+        
+        self.tabs = TabBar(self, tabs=rofl)
+        
+    def arrange(self):
+        self.tabs.grid(row=0, column=0)
 
 class Logon(Frame):
     def __init__(self, parent=None):
