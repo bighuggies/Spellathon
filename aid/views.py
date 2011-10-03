@@ -16,37 +16,41 @@ class Logon(Frame):
         self.loginframe = LabelFrame(self, text="Login")
         
         self.logo = PhotoImage(file="placeholder.gif")
-        self.logo_lbl = Label(image=self.logo)
+        self.logo_lbl = Label(self, image=self.logo)
         
         self.username_lbl = Label(self.loginframe, text="Username:")
         self.password_lbl = Label(self.loginframe, text="Password:")
         
         self.username_ebx = Entry(self.loginframe)
         self.password_ebx = Entry(self.loginframe, show="*")
-        
+                
         self.buttonframe = Frame(self.loginframe)
         self.login_btn = Button(self.buttonframe, text="Login")
         self.new_user_btn = Button(self.buttonframe, text="New user")
+        self.buttons = [self.login_btn, self.new_user_btn]
         
         self.userinfo = [self.username_lbl, self.username_ebx, 
                          self.password_lbl, self.password_ebx, self.buttonframe]
-        self.buttons = [self.login_btn, self.new_user_btn]
-        self.elements = [self.logo_lbl, self.loginframe, self.buttonframe]
-        
+
         self.administrate_btn = Button(self, text="Administrate")
+
+
+        self.elements = [self.logo_lbl, self.loginframe, self.administrate_btn]
         
         
     def arrange(self):
-        self.administrate_btn.grid(column=0, row=2, pady=2, sticky="we")
-        
+        # Arrange the picture, the login fields, and the administration panel
         for i, element in enumerate(self.elements):
-            element.grid(column=0, row=i, sticky="we")
+            element.grid(column=0, row=i, padx=5, pady=5, sticky="we")
         
+        # Arrange the login and new user buttons
+        for i, widget in enumerate(self.buttons):
+            widget.grid(column=i, row=0, padx=2, pady=2, sticky="we")
+        
+        # Arrange the login labels and fields
         for i, widget in enumerate(self.userinfo):
             widget.grid(column=0, row=i, padx=2, pady=2, sticky="we")
             
-        for i, widget in enumerate(self.buttons):
-            widget.grid(column=i, row=0, padx=2, pady=2, sticky="we")
 
 class UserRegistration(Dialog):        
     def build(self, master):
