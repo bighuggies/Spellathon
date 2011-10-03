@@ -9,6 +9,40 @@ from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox
 pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
 
+class ListManagement(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.build()
+        self.arrange()
+        
+    def build(self):
+        #####
+        items = []
+    
+        for i in range(1,50):
+            items.append((i, i, i))
+        #####
+        
+        self.manage_lists_frame = LabelFrame(self, text="Manage lists", **pad5)
+        
+        self.list_lbx = MultiScrollListbox(self.manage_lists_frame, items)
+        
+        self.new_list_btn = Button(self.manage_lists_frame, text="New list")
+        self.delete_list_btn = Button(self.manage_lists_frame, text="Delete list")
+        self.edit_list_btn = Button(self.manage_lists_frame, text="Edit list")
+        self.import_list_btn = Button(self.manage_lists_frame, text="Import list")
+        
+        self.controls = [self.new_list_btn, self.delete_list_btn,
+                         self.edit_list_btn, self.import_list_btn]
+
+    def arrange(self):
+        self.manage_lists_frame.grid(**pad5)
+        
+        self.list_lbx.grid(column=0, row=0, rowspan=4, **pad5)
+        
+        for i, control in enumerate(self.controls):
+            control.grid(column=1, row=i, sticky="we", padx=5, pady=2)
+
 class UserManagement(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
@@ -50,15 +84,12 @@ class Administration(Toplevel):
         self.arrange()
         
     def build(self):
-        #####
         um = UserManagement(self)
+        lm = ListManagement(self)
+                
+        tabs = {"Manage Users": um, "Manage Lists": lm}
         
-        lol2 = Logon(self)
-        
-        rofl = {"Manage Users": um, "Logon Frame": lol2}
-        ######
-        
-        self.tabs = TabBar(self, tabs=rofl)
+        self.tabs = TabBar(self, tabs=tabs)
         
     def arrange(self):
         self.tabs.grid(row=0, column=0)

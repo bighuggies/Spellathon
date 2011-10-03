@@ -13,10 +13,14 @@ class TabBar(Frame):
         
         self.tabs = tabs
         self.tab_var = StringVar()
+        
+        self.tab_var.set(self.tabs.keys()[0])
+        
         self.tab_buttons = []
         
         self.build()
         self.arrange()
+        self.switch_tab()
         
     def build(self):
         self.tab_frame = Frame(self)
@@ -122,7 +126,7 @@ class ScrollListbox(Frame):
             
         self.scrollbar = Scrollbar(self, orient=VERTICAL)
         self.listbox = Listbox(self, yscrollcommand=self.scrollbar.set)
-        self.scrollbar.config(command=self.listbox.on_vertical_scrollbar)
+        self.scrollbar.config(command=self.listbox.yview)
         
         self.scrollbar.pack(side=RIGHT, fill=Y)
         self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
