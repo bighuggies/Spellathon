@@ -131,6 +131,7 @@ class CreateAdmin(Dialog):
 class WelcomeScreen(Toplevel):
     def __init__(self, master=None):
         Toplevel.__init__(self, master)
+        self.resizable(False, False)
         self.build()
         self.arrange()
         
@@ -149,6 +150,7 @@ class WelcomeScreen(Toplevel):
 class SpellingAid(Toplevel):
     def __init__(self, master=None):
         Toplevel.__init__(self, master)
+        self.resizable(False, False)
         self.build()
         self.arrange()
         

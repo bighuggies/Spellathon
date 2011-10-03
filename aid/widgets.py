@@ -6,6 +6,76 @@ Created on 23/09/2011
 from Tkinter import *
 import os
 
+class MultiScrollListbox(Frame):
+    def __init__(self, master=None, items=None):
+        Frame.__init__(self, master)
+        self.listboxes=[]
+        self.curselection = None
+        
+        if items:
+            self.items = items        
+            self.build()
+            self.arrange()
+            self.bind()
+            self.update()
+        
+    def build(self):
+        self.scrollbar = Scrollbar(self, orient=VERTICAL)            
+        
+        for i in range(0, len(self.items[0])):
+            self.listboxes.append(Listbox(self, yscrollcommand=self.scrollbar.set,
+                                  selectmode="single", borderwidth=0, 
+                                  selectborderwidth=0, exportselection=0))
+
+        self.scrollbar.config(command=self.on_vertical_scrollbar)
+        
+    def arrange(self):
+        for listbox in self.listboxes:
+            listbox.pack(side=LEFT, fill=BOTH, expand=1)
+
+        self.scrollbar.pack(side=RIGHT, fill=Y)
+
+    def bind(self):
+        for listbox in self.listboxes:
+            listbox.bind("<MouseWheel>", self.on_mwheel)
+            listbox.bind("<Button-4>", self.on_mwheel)
+            listbox.bind("<Button-5>", self.on_mwheel)
+            listbox.bind("<<ListboxSelect>>", self.on_listbox_select)
+
+                            
+    def on_vertical_scrollbar(self, *args):
+        for listbox in self.listboxes:
+            apply(listbox.yview, args)
+            
+    def on_mwheel(self, event):
+        if (event.num == 4):    # Linux encodes wheel as 'buttons' 4 and 5
+            delta = -1
+        elif (event.num == 5):
+            delta = 1
+        else:                   # Windows & OSX
+            delta = event.delta
+        for lb in self.listboxes:
+            lb.yview("scroll", delta, "units")
+            
+        return "break"
+    
+    def on_listbox_select(self, event):
+        lindex = int(event.widget.curselection()[0])
+        
+        for listbox in self.listboxes:
+            listbox.selection_clear(0, END)
+            listbox.selection_set(lindex)
+
+        self.curselection = (self.listboxes[0].get(lindex))
+            
+    def update(self):
+        for i in range(len(self.listboxes)):
+            self.listboxes[i].delete(first=0, last=END)
+
+            for item in self.items:
+                lol = list(item)
+                self.listboxes[i].insert(END, lol[i])
+
 class ScrollListbox(Frame):
     def __init__(self, master, items=None):
         Frame.__init__(self, master)
@@ -17,7 +87,7 @@ class ScrollListbox(Frame):
             
         self.scrollbar = Scrollbar(self, orient=VERTICAL)
         self.listbox = Listbox(self, yscrollcommand=self.scrollbar.set)
-        self.scrollbar.config(command=self.listbox.yview)
+        self.scrollbar.config(command=self.listbox.on_vertical_scrollbar)
         
         self.scrollbar.pack(side=RIGHT, fill=Y)
         self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
