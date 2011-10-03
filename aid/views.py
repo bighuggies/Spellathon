@@ -23,14 +23,25 @@ class UserManagement(Frame):
             items.append((i, i, i))
         #####
         
-        self.user_lbx = MultiScrollListbox(self, items)
-        self.new_user_btn = Button(self, text="New user")
-        self.delete_user_btn = Button(self, text="Delete user")
-        self.edit_user_btn = Button(self, text="Edit user")
-        self.user_score_btn = Button(self, text="View scores")
+        self.manage_users_frame = LabelFrame(self, text="Manage users", **pad5)
+        
+        self.user_lbx = MultiScrollListbox(self.manage_users_frame, items)
+        
+        self.new_user_btn = Button(self.manage_users_frame, text="New user")
+        self.delete_user_btn = Button(self.manage_users_frame, text="Delete user")
+        self.edit_user_btn = Button(self.manage_users_frame, text="Edit user")
+        self.user_score_btn = Button(self.manage_users_frame, text="View scores")
+        
+        self.controls = [self.new_user_btn, self.delete_user_btn,
+                         self.edit_user_btn, self.user_score_btn]
 
     def arrange(self):
-        a=0
+        self.manage_users_frame.grid(**pad5)
+        
+        self.user_lbx.grid(column=0, row=0, rowspan=4, **pad5)
+        
+        for i, control in enumerate(self.controls):
+            control.grid(column=1, row=i, sticky="we", padx=5, pady=2)
         
 class Administration(Toplevel):
     def __init__(self, master=None):
@@ -40,13 +51,11 @@ class Administration(Toplevel):
         
     def build(self):
         #####
-        lol = Frame(self)
-        rofl = Label(lol, text="rofl")
-        rofl.pack()
+        um = UserManagement(self)
         
         lol2 = Logon(self)
         
-        rofl = {"One": lol, "Two": lol2}
+        rofl = {"Manage Users": um, "Logon Frame": lol2}
         ######
         
         self.tabs = TabBar(self, tabs=rofl)
