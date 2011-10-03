@@ -8,8 +8,19 @@ import os
 
 class ScrollListbox(Frame):
     def __init__(self, master, items=None):
-        self.items = items
-        self.listbox = Listbox(self)
+        Frame.__init__(self, master)
+        
+        if items:
+            self.items = items
+        else:
+            self.items = {}
+            
+        self.scrollbar = Scrollbar(self, orient=VERTICAL)
+        self.listbox = Listbox(self, yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(command=self.listbox.yview)
+        
+        self.scrollbar.pack(side=RIGHT, fill=Y)
+        self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
         
     def insert(self, name, item):
         self.items[name] = item
@@ -30,6 +41,7 @@ class Dialog(Toplevel):
     def __init__(self, parent, title = None, btncolumn=100, btnrow=100):
         Toplevel.__init__(self, parent)
         self.transient(parent)
+        self.resizable(False, False)
 
         if title:
             self.title(title)
@@ -75,9 +87,9 @@ class Dialog(Toplevel):
         box = Frame(self)
 
         w = Button(box, text="OK", width=10, command=self.ok, default=ACTIVE)
-        w.grid(column=0, row=0, padx=2, pady=2)
+        w.grid(column=0, row=0, padx=5, pady=2)
         w = Button(box, text="Cancel", width=10, command=self.cancel)
-        w.grid(column=1, row=0, padx=2, pady=2)
+        w.grid(column=1, row=0, padx=5, pady=2)
 
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)
