@@ -35,14 +35,12 @@ class Dialog(Toplevel):
             self.title(title)
             
         self.result = None
-        
-        body = Frame(self)
-            
-        self.build(body)
+                    
+        self.build()
         self.arrange()
         self.buttonbox(btncolumn, btnrow)
 
-        body.grid(padx=5, pady=5, sticky="nswe")
+#        body.grid(row=0, column=0, padx=5, pady=5, sticky="nswe")
         
         # Disable other windows
         self.grab_set()
@@ -60,7 +58,7 @@ class Dialog(Toplevel):
     #
     # construction hooks
 
-    def build(self, master):
+    def build(self):
         # create dialog body.
 
         pass
