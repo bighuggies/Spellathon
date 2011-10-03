@@ -3,11 +3,15 @@ Created on Sep 29, 2011
 
 @author: ahug048
 '''
-from spellingaid.views import Logon
+from aid.views import Logon, UserRegistration
+from aid.widgets import Dialog
 from Tkinter import *
 
 if __name__ == "__main__":
     root = Tk()
-    sa = Logon(root)
-    sa.pack(fill=BOTH, expand=True)
+    
+    logon = Logon(root)
+    logon.grid(column=1, row=1)
+    reg = UserRegistration(root, btncolumn=1, btnrow=100)
+
     root.mainloop()
