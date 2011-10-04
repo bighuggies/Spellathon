@@ -66,7 +66,6 @@ class ListEdit(Dialog):
         self.word_example_lbl = Label(self.word_metadata, text="No example", wraplength=200)
         self.speak_btn = Button(self.word_metadata, text="Speak")
         
-        
     def arrange(self):
         self.source_frame.grid(column=0, row=0, sticky="nswe", **pad5)
         
@@ -213,22 +212,23 @@ class Logon(Frame):
         for i, widget in enumerate(self.userinfo):
             widget.grid(column=0, row=i, sticky="we", **pad2)
 
-class UserRegistration(Dialog):        
+class NewUser(Dialog):        
     def build(self):
         self.register_frame = LabelFrame(self, text="New user", **pad5)
         
         self.username_lbl = Label(self.register_frame, text="Username:")
+        self.realname_lbl = Label(self.register_frame, text="Realname:")
         self.password_lbl = Label(self.register_frame, text="Password:")
         self.password_confirmation_lbl = Label(self.register_frame, text="Confirm password:")
         self.age_lbl = Label(self.register_frame, text="Age:")
         self.photo_lbl = Label(self.register_frame, text="Photo:")
-        self.user_type_lbl = Label(self.register_frame, text="User type:")
         
-        self.labels = [self.username_lbl, self.password_lbl, 
+        self.labels = [self.username_lbl, self.realname_lbl, self.password_lbl, 
                        self.password_confirmation_lbl, self.age_lbl,
-                       self.photo_lbl, self.user_type_lbl]
+                       self.photo_lbl]
         
         self.username_ebx = Entry(self.register_frame)
+        self.realname_ebx = Entry(self.register_frame)
         self.password_ebx = Entry(self.register_frame, show="*")
         self.password_confirmation_ebx = Entry(self.register_frame, show="*")
         self.age_ebx = Entry(self.register_frame)
@@ -237,26 +237,15 @@ class UserRegistration(Dialog):
         self.photo_btn = Button(self.photo_fields, text="Browse")
         self.photo_ebx = Entry(self.photo_fields)
         
-        self.user_type_var = StringVar()
-        self.user_type_var.set("Student")
-        
-        self.user_type = Frame(self.register_frame)
-        
-        self.student_rbn = Radiobutton(self.user_type, text="Student", variable=self.user_type_var, value="Student")
-        self.teacher_rbn = Radiobutton(self.user_type, text="Teacher", variable=self.user_type_var, value="Teacher")
-
-        self.fields = [self.username_ebx, self.password_ebx,
+        self.fields = [self.username_ebx, self.realname_ebx, self.password_ebx,
                        self.password_confirmation_ebx, self.age_ebx,
-                       self.photo_fields, self.user_type]
+                       self.photo_fields]
         
         self.user_type_var = StringVar()
         
     def arrange(self):
         self.register_frame.grid(column=0, row=0, **pad5)
-        
-        self.student_rbn.grid(column=0, row=0, sticky="w", **pad2)
-        self.teacher_rbn.grid(column=1, row=0, sticky="w", **pad2)
-        
+                
         self.photo_ebx.grid(column=0, row=0, sticky="we")
         self.photo_btn.grid(column=1, row=0, padx=2, sticky="we")
         
