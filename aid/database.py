@@ -50,10 +50,18 @@ class DBManager(object):
             
     def retrieve_user(self, user):        
         c = self.db.cursor()
-        c.execute("SELECT user FROM users where user=?", (user,))
+        
+        try:
+            c.execute("SELECT user FROM users where username=?", (user.username,))
+        except AttributeError:
+            c.execute("SELECT user FROM users where username=?", (user,))        
         
         return c.fetchone()
     
     def remove_user(self, user):
         c = self.db.cursor()
-        c.execute("DELETE FROM users WHERE username=?", (user.username,))
+        
+        try:
+            c.execute("DELETE FROM users WHERE username=?", (user.username,))
+        except AttributeError:
+            c.execute("DELETE FROM users WHERE username=?", (user,))
