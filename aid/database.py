@@ -19,7 +19,7 @@ CREATE TABLE "words" (
 );
 
 CREATE TABLE "users" (
-    "id" INTEGER PRIMARY KEY,
+    "username" VARCHAR(96) PRIMARY KEY,
     "user" User
 );
 """
@@ -41,11 +41,19 @@ class DBManager(object):
             
     def add_user(self, user):
         c = self.db.cursor()
-        c.execute("INSERT INTO users VALUES (null, ?)", (user,))
-        self.db.commit()
+        try:
+            c.execute("INSERT INTO users VALUES (?, ?)", (user.username, user))
+            self.db.commit()
+            return True
+        except sqlite.IntegrityError:
+            return False
             
     def retrieve_user(self, user):        
         c = self.db.cursor()
-        c.execute("SELECT * FROM users where user=?", (user,))
+        c.execute("SELECT user FROM users where user=?", (user,))
         
         return c.fetchone()
+    
+    def remove_user(self, user):
+        c = self.db.cursor()
+        c.execute("DELETE FROM users WHERE username=?", (user.username,))
