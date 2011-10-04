@@ -9,6 +9,90 @@ from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox
 pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
 
+class NewWord(Dialog):
+    def build(self):
+        self.word_information_frame = LabelFrame(self, text="Word details", **pad5)
+        self.word_lbl = Label(self.word_information_frame, text="Word:")
+        self.definition_lbl = Label(self.word_information_frame, text="Definition:")
+        self.example_lbl = Label(self.word_information_frame, text="Example:")
+        
+        self.word_ebx = Entry(self.word_information_frame)
+        self.definition_ebx = Text(self.word_information_frame, width=30, height=4)
+        self.example_ebx = Text(self.word_information_frame, width=30, height=4)
+        
+        self.labels = [self.word_lbl, self.definition_lbl, self.example_lbl]
+        self.fields = [self.word_ebx, self.definition_ebx, self.example_ebx]
+        
+    def arrange(self):
+        self.word_information_frame.grid(column=0, row=0, sticky="nswe", **pad5)
+        
+        for i, label in enumerate(self.labels):
+            label.grid(column=0, row=i, sticky="nw", **pad2)
+            
+        for i, field in enumerate(self.fields):
+            field.grid(column=1, row=i, sticky="we", **pad2)
+
+class ListEdit(Dialog):
+    def build(self):
+        self.source_frame = LabelFrame(self, text="Source", **pad5)
+        self.destination_frame = LabelFrame(self, text="Destination", **pad5)
+        
+        self.source_var = StringVar()
+        self.source_opt = OptionMenu(self.source_frame, self.source_var, "test", "test2")
+        self.source_words_lbx = ScrollListbox(self.source_frame)
+        self.source_filter_ebx = Entry(self.source_frame)
+        
+        self.control_column = Frame(self)
+        self.add_btn = Button(self.control_column, text="Add word >")
+        self.add_all_btn = Button(self.control_column, text="Add all words >>")
+        self.add_x_btn = Button(self.control_column, text="Add x words >")
+        self.remove_btn = Button(self.control_column, text="Remove word")
+        self.remove_all_btn = Button(self.control_column, text="Remove all words")
+        self.new_word_btn = Button(self.control_column, text="Add new word")
+        
+        self.control_column_elements = [self.add_btn, self.add_all_btn, self.add_x_btn,
+                                        self.remove_btn, self.remove_all_btn, self.new_word_btn]
+        
+        self.destination_lbl = Label(self.destination_frame, text="List contents:")
+        self.destination_lbx = ScrollListbox(self.destination_frame)
+        self.destination_filter_ebx = Entry(self.destination_frame)
+        
+        
+        self.word_metadata = LabelFrame(self, text="Word", **pad5)
+                
+        self.definition_lbl= Label(self.word_metadata, text="Definition:")
+        self.example_lbl = Label(self.word_metadata, text="Example:")
+        self.word_definition_lbl = Label(self.word_metadata, text="No definition", wraplength=200)
+        self.word_example_lbl = Label(self.word_metadata, text="No example", wraplength=200)
+        self.speak_btn = Button(self.word_metadata, text="Speak")
+        
+        
+    def arrange(self):
+        self.source_frame.grid(column=0, row=0, sticky="nswe", **pad5)
+        
+        self.source_opt.grid(column=0, row=0, **pad2)
+        self.source_words_lbx.grid(column=0, row=1, sticky="nswe", **pad2)
+        self.source_filter_ebx.grid(column=0, row=2, sticky="nswe", **pad2)
+        
+        self.control_column.grid(column=1, row=0, sticky="nswe", **pad5)
+        
+        for i, button in enumerate(self.control_column_elements):
+            button.grid(column=0, row=i, sticky="we", **pad2)
+            
+        self.destination_frame.grid(column=2, row=0, sticky="nswe", **pad5)
+        
+        self.destination_lbl.grid(column=0, row=0, sticky="nsw", **pad2)
+        self.destination_lbx.grid(column=0, row=1, sticky="nswe", **pad2)
+        self.destination_filter_ebx.grid(column=0, row=2, sticky="nswe", **pad2)
+        
+        self.word_metadata.grid(column=0, row=1, columnspan=3, sticky="we", **pad5)
+        
+        self.definition_lbl.grid(column=0, row=0, sticky="w", **pad2)
+        self.example_lbl.grid(column=0, row=1, sticky="w", **pad2)
+        self.word_definition_lbl.grid(column=1, row=0, sticky="w", **pad2)
+        self.word_example_lbl.grid(column=1, row=1, sticky="w", **pad2)
+        self.speak_btn.grid(column=0, row=2, sticky="w", columnspan=2, **pad2)
+
 class ListManagement(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
