@@ -33,11 +33,8 @@ class User(object):
     def deserialise(cls, string):
         parts = string.split("|")
         parts[-1] = pickle.loads(parts[-1])
-        for item in parts:
-            print item
+        
         return cls(*parts)
-        
-        
         
     def add_score(self, list, score):
         try:
