@@ -8,8 +8,10 @@ import hashlib
 import tkMessageBox
 import tkFileDialog
 from user import User
+from game import Session
 from database import *
 from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
+from models import TLDROptionMenuModel
 
 pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
@@ -368,14 +370,21 @@ class WelcomeScreen(Toplevel):
     def build(self):
         self.welcome_frame = LabelFrame(self, text="Welcome", **pad5)
         self.welcome_lbl = Label(self.welcome_frame, text="Welcome! Choose your action:")
-        self.spelling_btn = Button(self.welcome_frame, text="Begin Spelling", width=20, height=5)
-        self.score_btn = Button(self.welcome_frame, text="View Scores", width=20, height=5)
+        self.spelling_btn = Button(self.welcome_frame, text="Begin Spelling", width=20, height=5, command=self.spelling_aid)
+        self.score_btn = Button(self.welcome_frame, text="View Scores", width=20, height=5, command=self.score)
         
     def arrange(self):
         self.welcome_frame.grid(**pad5)
         self.welcome_lbl.grid(**pad2)
         self.spelling_btn.grid(**pad2)
         self.score_btn.grid(**pad2)
+        
+    def spelling_aid(self):
+        sa = SpellingAid(self.master)
+        self.destroy()
+        
+    def score(self):
+        sc = Score(self)
         
 class SpellingAid(Toplevel):
     def __init__(self, master=None):
@@ -388,9 +397,10 @@ class SpellingAid(Toplevel):
         self.word_metadata = LabelFrame(self, text="Word")
         
         self.lists_var = StringVar()
-        self.lists_var.set("test")
-        self.lists_opt = OptionMenu(self, self.lists_var, "test", "test2")
-        self.start_spelling_btn = Button(self, text="Start spelling")
+        self.lists_opt = OptionMenu(self, self.lists_var, "")
+        self.lists_opt.config(anchor="w")
+        self.lists_model = TLDROptionMenuModel(self.lists_opt, self.lists_var)
+        self.start_spelling_btn = Button(self, text="Start spelling", command=self.start_session)
         
         self.definition_lbl= Label(self.word_metadata, text="Definition:")
         self.example_lbl = Label(self.word_metadata, text="Example:")
@@ -399,7 +409,7 @@ class SpellingAid(Toplevel):
         self.speak_again_btn = Button(self.word_metadata, text="Speak again")
         
         self.word_ebx= Entry(self, font=("Helvetica", 16), width=30)
-        self.word_submit_btn = Button(self, text="Submit")
+        self.word_submit_btn = Button(self, text="Submit", command=self.submit)
         
         self.score = LabelFrame(self, text="Score", **pad5)
         self.score_lbl = Label(self.score, text="Score:")
@@ -409,7 +419,11 @@ class SpellingAid(Toplevel):
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
-        self.exit_btn= Button(self, text="Exit")
+        self.exit_btn= Button(self, text="Exit", command=self.welcome_screen)
+        
+    def welcome_screen(self):
+        ws = WelcomeScreen(self.master)
+        self.destroy()
         
     def arrange(self):
         self.lists_opt.grid(column=0, row=0, sticky="we", padx=5, pady=2)
@@ -432,6 +446,22 @@ class SpellingAid(Toplevel):
         self.word_definition_lbl.grid(column=1, row=0, sticky="w", **pad2)
         self.word_example_lbl.grid(column=1, row=1, sticky="w", **pad2)
         self.speak_again_btn.grid(column=0, row=2, sticky="w", columnspan=2, **pad2)
+        
+    def start_session(self):
+        self.start_spelling_btn.config(text="Stop spelling", command=self.end_session)
+        self.session = Session(self, self.lists_model.get_list())
+        self.session.start()
+        
+    def end_session(self):
+        self.start_spelling_btn.config(text="Start spelling", command=self.start_session)
+        self.session.end()
+        
+    def update(self, definition, example):
+        self.definition_lbl.config(text=definition)
+        self.example_lbl.config(text=example)
+        
+    def submit(self):
+        self.session.check(self.word_ebx.get())
         
 class SpellingComplete(Dialog):
     def build(self):

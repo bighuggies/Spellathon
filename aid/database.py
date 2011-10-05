@@ -7,7 +7,7 @@ Created on 4/10/2011
 import sqlite3 as sqlite
 import os
 from user import User
-from word import Word
+from words import Word
 
 INIT = """
 CREATE TABLE "words" (
@@ -40,7 +40,6 @@ class DBManager(object):
         sqlite.register_converter("User", User.deserialise)
         sqlite.register_converter("Word", Word.deserialise)
         
-        
     def commit(self):
         self.db.commit()
         self.c.close()
@@ -61,10 +60,15 @@ class UserManager(DBManager):
         try:
             self.c.execute("SELECT user FROM users WHERE username=?", (user.username,))
         except AttributeError:
-            self.c.execute("SELECT user FROM users WHERE username=?", (user,))        
+            self.c.execute("SELECT user FROM users WHERE username=?", (user,))
         
-        return self.c.fetchone()[0]
-    
+        users = self.c.fetchone()
+        
+        if users:
+            return users[0]
+        else:
+            return None
+            
     def retrieve_users(self):
         self.c.execute("SELECT user FROM users")
         
@@ -105,7 +109,12 @@ class WordManager(DBManager):
         except AttributeError:
             self.c.execute("SELECT word FROM words WHERE string=?", (word,))
         
-        return self.c.fetchone()[0]
+        word = self.c.fetchone()
+        
+        if word:
+            return word[0]
+        else:
+            return None
         
     def retrieve_words_of_difficulty(self, difficulty):
         self.c.execute("SELECT word FROM words")
@@ -120,6 +129,6 @@ class WordManager(DBManager):
    
     def remove_word(self, word):
         try:
-            self.c.execute("DELETE word FROM words WHERE string=?", (word.word,))
+            self.c.execute("DELETE FROM words WHERE string=?", (word.word,))
         except AttributeError:
-            self.c.execute("DELETE word FROM words WHERE string=?", (word,))
+            self.c.execute("DELETE FROM words WHERE string=?", (word,))

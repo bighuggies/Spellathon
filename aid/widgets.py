@@ -9,7 +9,6 @@ import datetime
 import tkMessageBox
 
 class DateEntry(Frame):
-    
     def __init__(self, master=None):
         Frame.__init__(self, master)
         
