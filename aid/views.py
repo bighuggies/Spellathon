@@ -183,9 +183,12 @@ class Administration(Toplevel):
     def arrange(self):
         self.tabs.grid(row=0, column=0)
 
-class Logon(Frame):
+class Logon(Toplevel):
     def __init__(self, parent=None):
-        Frame.__init__(self, parent)
+        Toplevel.__init__(self, parent)
+        self.title("Spellathon Logon")
+        self.resizable(False, False)
+        self.bind("<Return>", self.validate)
         self.build()
         self.arrange()
         
@@ -199,7 +202,7 @@ class Logon(Frame):
         self.username_ebx = Entry(self.loginframe)
         self.password_ebx = Entry(self.loginframe, show="*")
         
-        self.login_btn = Button(self.loginframe, text="Login")
+        self.login_btn = Button(self.loginframe, text="Login", command=self.validate)
         self.new_user_btn = Button(self.loginframe, text="New user", command=self.new_user)
         
         self.userinfo = [self.username_lbl, self.username_ebx, 
@@ -220,6 +223,25 @@ class Logon(Frame):
             
     def new_user(self):
         nu = NewUser(self, btncolumn=0)
+        
+    def welcome_screen(self):
+        ws = WelcomeScreen(self.master)
+        
+    def validate(self, *args):
+        username = self.username_ebx.get()
+        password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
+        
+        um = UserManager()
+        user = um.retrieve_user(username)
+        
+        if user:
+            if user.password == password:
+                self.welcome_screen()
+                self.destroy()
+            else:
+                tkMessageBox.showerror("Error", "Incorrect password")
+        else:
+            tkMessageBox.showerror("Error", "No such user")
 
 class NewUser(Dialog):        
     def build(self):
