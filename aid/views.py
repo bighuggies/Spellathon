@@ -263,7 +263,9 @@ class NewUser(Dialog):
             widget.grid(column=1, row=i, sticky="we", **pad2)
             
     def get_photo(self):
+        self.photo_ebx.config(state=NORMAL)
         self.photo_ebx.insert(END, tkFileDialog.askopenfilename(filetypes=[("image files", ".gif")]))
+        self.photo_ebx.config(state="readonly")
             
     def validate(self):
         username = self.username_ebx.get()
@@ -290,13 +292,16 @@ class NewUser(Dialog):
             return False
         
         self.user = User(username, realname, password, dob, photo)
+        self.um = UserManager()
         
-        return True
+        if not self.um.add_user(self.user):
+            tkMessageBox.showerror("Error", "A user with that username already exists.")
+            return False
+        
+        return tkMessageBox.askyesno("New user", "Create user " + username + "?")
         
     def apply(self):
-        um = UserManager()
-        um.add_user(self.user)
-        um.commit()
+        self.um.commit()
         tkMessageBox.showinfo("User added", "User " + self.user.username + " added successfully.")
             
 class Authoriser(Dialog):
