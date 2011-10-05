@@ -404,8 +404,8 @@ class SpellingAid(Toplevel):
         
         self.definition_lbl= Label(self.word_metadata, text="Definition:")
         self.example_lbl = Label(self.word_metadata, text="Example:")
-        self.word_definition_lbl = Label(self.word_metadata, text="No definition", wraplength=200)
-        self.word_example_lbl = Label(self.word_metadata, text="No example", wraplength=200)
+        self.word_definition_lbl = Label(self.word_metadata, text="No definition", wraplength=400, justify=LEFT)
+        self.word_example_lbl = Label(self.word_metadata, text="No example", wraplength=400, justify=LEFT)
         self.speak_again_btn = Button(self.word_metadata, text="Speak again")
         
         self.word_ebx= Entry(self, font=("Helvetica", 16), width=30)
@@ -441,8 +441,8 @@ class SpellingAid(Toplevel):
         for i, widget in enumerate(self.score_elements):
             widget.grid(column=i, row=0, sticky="w", **pad2)
                     
-        self.definition_lbl.grid(column=0, row=0, sticky="w", **pad2)
-        self.example_lbl.grid(column=0, row=1, sticky="w", **pad2)
+        self.definition_lbl.grid(column=0, row=0, sticky="nw", **pad2)
+        self.example_lbl.grid(column=0, row=1, sticky="nw", **pad2)
         self.word_definition_lbl.grid(column=1, row=0, sticky="w", **pad2)
         self.word_example_lbl.grid(column=1, row=1, sticky="w", **pad2)
         self.speak_again_btn.grid(column=0, row=2, sticky="w", columnspan=2, **pad2)
@@ -457,11 +457,12 @@ class SpellingAid(Toplevel):
         self.session.end()
         
     def update(self, definition, example):
-        self.definition_lbl.config(text=definition)
-        self.example_lbl.config(text=example)
+        self.word_definition_lbl.config(text=definition)
+        self.word_example_lbl.config(text=example)
         
     def submit(self):
-        self.session.check(self.word_ebx.get())
+        if self.session.check(self.word_ebx.get()):
+            self.word_ebx.delete(0, END)
         
 class SpellingComplete(Dialog):
     def build(self):
