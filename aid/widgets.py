@@ -5,6 +5,70 @@ Created on 23/09/2011
 '''
 from Tkinter import *
 import os
+import datetime
+import tkMessageBox
+
+class DateEntry(Frame):
+    
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        
+        self.build()
+        self.arrange()
+        
+    def build(self):
+        self.day_lbl = Label(self, text="Day:")
+        self.month_lbl = Label(self, text="Month:")
+        self.year_lbl = Label(self, text="Year:")
+        
+        self.defaults = [1, 1, 2000]
+        self.date = datetime.date(self.defaults[2], self.defaults[1], self.defaults[0])
+        
+        self.day_var = IntVar()
+        self.month_var = IntVar()
+        self.year_var = IntVar()
+        
+        self.vars = [self.day_var, self.month_var, self.year_var]
+
+        
+        for i, var in enumerate(self.vars):
+            var.set(self.defaults[i])
+            var.trace("w", self.validate)
+        
+        days = []
+        months = []
+        years = []
+        
+        for i in range(1,32):
+            days.append(i)
+            
+        for i in range(1,13):
+            months.append(i)
+            
+        for i in range(2000, 2012):
+            years.append(i)
+        
+        self.day_opt = OptionMenu(self, self.day_var, *days)
+        self.month_opt = OptionMenu(self, self.month_var, *months)
+        self.year_opt = OptionMenu(self, self.year_var, *years)
+        
+        self.widgets = [self.day_lbl, self.day_opt, self.month_lbl, self.month_opt,
+                   self.year_lbl, self.year_opt]
+        
+    def arrange(self):
+        for i, w in enumerate(self.widgets):
+            w.grid(column=i, row=0, padx=2, pady=2, sticky="we")
+            
+    def get(self):
+        return self.date
+        
+    def validate(self, *args):
+        try:
+            self.date = datetime.date(self.year_var.get(), self.month_var.get(), self.day_var.get())
+        except ValueError:
+            tkMessageBox.showerror("Date error", "Please enter a valid date!")
+            for i, var in enumerate(self.vars):
+                var.set(self.defaults[i])
 
 class TabBar(Frame):
     def __init__(self, master=None, tabs=None):
@@ -211,7 +275,6 @@ class Dialog(Toplevel):
     def ok(self, event=None):
 
         if not self.validate():
-            self.initial_focus.focus_set() # put focus back
             return
 
         self.withdraw()
