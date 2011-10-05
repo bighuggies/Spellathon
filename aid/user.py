@@ -4,6 +4,8 @@ Created on Sep 29, 2011
 @author: ahug048
 '''
 import pickle
+import os
+import shutil
 
 class User(object):
     def __init__(self, username, realname, password, dob, photo=None, scores=None):
@@ -11,7 +13,12 @@ class User(object):
         self.realname = realname
         self.password = password
         self.dob = dob
-        self.photo = photo
+        
+        try:
+            shutil.copy(photo, ".userimages/" + username + ".gif")
+            self.photo = photo
+        except IOError:
+            self.photo = ".userimages/nophoto.gif"
         
         if scores:
             self.scores = scores
