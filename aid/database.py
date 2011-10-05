@@ -117,6 +117,9 @@ class WordManager(DBManager):
                 words.append(row[0])
         
         return words
-                
-#        
-#    def remove_word(self, word):
+   
+    def remove_word(self, word):
+        try:
+            self.c.execute("DELETE word FROM words WHERE string=?", (word.word,))
+        except AttributeError:
+            self.c.execute("DELETE word FROM words WHERE string=?", (word,))
