@@ -6,11 +6,11 @@ Created on Sep 29, 2011
 import pickle
 
 class User(object):
-    def __init__(self, username, realname, password, birthday, photo=None, scores=None):
+    def __init__(self, username, realname, password, dob, photo=None, scores=None):
         self.username = username
         self.realname = realname
         self.password = password
-        self.birthday = birthday
+        self.dob = dob
         self.photo = photo
         
         if scores:
@@ -25,7 +25,7 @@ class User(object):
         return "%s|%s|%s|%s|%s|%s" % (self.username,
                                       self.realname,
                                       self.password,
-                                      self.birthday,
+                                      self.dob,
                                       self.photo,
                                       scores)
         
