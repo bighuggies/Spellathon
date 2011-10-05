@@ -4,7 +4,12 @@ Created on Sep 29, 2011
 @author: ahug048
 '''
 from Tkinter import *
-from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox
+import hashlib
+import tkMessageBox
+import tkFileDialog
+from user import User
+from database import *
+from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
 
 pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
@@ -193,8 +198,9 @@ class Logon(Frame):
         self.password_lbl = Label(self.loginframe, text="Password:")
         self.username_ebx = Entry(self.loginframe)
         self.password_ebx = Entry(self.loginframe, show="*")
+        
         self.login_btn = Button(self.loginframe, text="Login")
-        self.new_user_btn = Button(self.loginframe, text="New user")
+        self.new_user_btn = Button(self.loginframe, text="New user", command=self.new_user)
         
         self.userinfo = [self.username_lbl, self.username_ebx, 
                          self.password_lbl, self.password_ebx, self.login_btn, self.new_user_btn]
@@ -211,49 +217,87 @@ class Logon(Frame):
         # Arrange the login labels and fields
         for i, widget in enumerate(self.userinfo):
             widget.grid(column=0, row=i, sticky="we", **pad2)
+            
+    def new_user(self):
+        nu = NewUser(self, btncolumn=0)
 
 class NewUser(Dialog):        
     def build(self):
         self.register_frame = LabelFrame(self, text="New user", **pad5)
         
         self.username_lbl = Label(self.register_frame, text="Username:")
-        self.realname_lbl = Label(self.register_frame, text="Realname:")
+        self.realname_lbl = Label(self.register_frame, text="Real name:")
         self.password_lbl = Label(self.register_frame, text="Password:")
         self.password_confirmation_lbl = Label(self.register_frame, text="Confirm password:")
-        self.age_lbl = Label(self.register_frame, text="Age:")
+        self.dob_lbl = Label(self.register_frame, text="Date of birth:")
         self.photo_lbl = Label(self.register_frame, text="Photo:")
         
         self.labels = [self.username_lbl, self.realname_lbl, self.password_lbl, 
-                       self.password_confirmation_lbl, self.age_lbl,
+                       self.password_confirmation_lbl, self.dob_lbl,
                        self.photo_lbl]
         
         self.username_ebx = Entry(self.register_frame)
         self.realname_ebx = Entry(self.register_frame)
         self.password_ebx = Entry(self.register_frame, show="*")
         self.password_confirmation_ebx = Entry(self.register_frame, show="*")
-        self.age_ebx = Entry(self.register_frame)
+        self.dob_ebx = DateEntry(self.register_frame)
         
         self.photo_fields = Frame(self.register_frame)
-        self.photo_btn = Button(self.photo_fields, text="Browse")
-        self.photo_ebx = Entry(self.photo_fields)
+        self.photo_btn = Button(self.photo_fields, text="Browse", command=self.get_photo)
+        self.photo_ebx = Entry(self.photo_fields, state=DISABLED)
         
         self.fields = [self.username_ebx, self.realname_ebx, self.password_ebx,
-                       self.password_confirmation_ebx, self.age_ebx,
+                       self.password_confirmation_ebx, self.dob_ebx,
                        self.photo_fields]
-        
-        self.user_type_var = StringVar()
         
     def arrange(self):
         self.register_frame.grid(column=0, row=0, **pad5)
                 
         self.photo_ebx.grid(column=0, row=0, sticky="we")
-        self.photo_btn.grid(column=1, row=0, padx=2, sticky="we")
+        self.photo_btn.grid(column=1, row=0, padx=2, sticky="e")
         
         for i, widget in enumerate(self.labels):
             widget.grid(column=0, row=i, sticky="w", **pad2)
             
         for i, widget in enumerate(self.fields):
             widget.grid(column=1, row=i, sticky="we", **pad2)
+            
+    def get_photo(self):
+        self.photo_ebx.insert(END, tkFileDialog.askopenfilename(filetypes=[("image files", ".gif")]))
+            
+    def validate(self):
+        username = self.username_ebx.get()
+        realname = self.realname_ebx.get()
+        password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
+        confpassword = hashlib.sha224(username + self.password_confirmation_ebx.get()).hexdigest()
+        dob = self.dob_ebx.get()
+        photo = self.photo_ebx.get()
+        
+        if username == "":
+            tkMessageBox.showerror("Error", "Please enter a username.")
+            return False
+
+        if realname == "":
+            tkMessageBox.showerror("Error", "Please enter your real name.")
+            return False
+        
+        if self.password_ebx.get() == "":
+            tkMessageBox.showerror("Error", "Please provide a password.")
+            return False
+
+        if password != confpassword:
+            tkMessageBox.showerror("Error", "Passwords do not match.")
+            return False
+        
+        self.user = User(username, realname, password, dob, photo)
+        
+        return True
+        
+    def apply(self):
+        um = UserManager()
+        um.add_user(self.user)
+        um.commit()
+        tkMessageBox.showinfo("User added", "User " + self.user.username + " added successfully.")
             
 class Authoriser(Dialog):
     def build(self):
