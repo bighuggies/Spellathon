@@ -25,10 +25,10 @@ class TLDROptionMenuModel(object):
         return tldrs
     
     def update_entries(self):
-        self.optionmenu["menu"].delete(0, END)
+        self.optionmenu['menu'].delete(0, END)
 
         for i in sorted(self.wordlists.keys()):
-            self.optionmenu["menu"].add_command(label=i, command=lambda temp = i: self.optionmenu.setvar(self.optionmenu.cget("textvariable"), value = temp))
+            self.optionmenu['menu'].add_command(label=i, command=lambda temp = i: self.optionmenu.setvar(self.optionmenu.cget('textvariable'), value = temp))
         
         self.optionmenuvar.set(sorted(self.wordlists.keys())[0])
         

@@ -9,26 +9,26 @@ import os
 from user import User
 from words import Word
 
-INIT = """
-CREATE TABLE "words" (
-    "string" VARCHAR(96) PRIMARY KEY,
-    "word" Word
+INIT = '''
+CREATE TABLE 'words' (
+    'string' VARCHAR(96) PRIMARY KEY,
+    'word' Word
 );
 
-CREATE TABLE "users" (
-    "username" VARCHAR(96) PRIMARY KEY,
-    "user" User
+CREATE TABLE 'users' (
+    'username' VARCHAR(96) PRIMARY KEY,
+    'user' User
 );
-"""
+'''
 
 class DBManager(object):
     def __init__(self):
         exists = False
         
-        if os.path.isfile("spellingaid.db"):
+        if os.path.isfile('spellingaid.db'):
             exists = True
             
-        self.db = sqlite.connect("spellingaid.db", detect_types = sqlite.PARSE_DECLTYPES)
+        self.db = sqlite.connect('spellingaid.db', detect_types = sqlite.PARSE_DECLTYPES)
         self.c = self.db.cursor()
             
         if not exists:
@@ -37,8 +37,8 @@ class DBManager(object):
         sqlite.register_adapter(User, lambda u : u.serialise())
         sqlite.register_adapter(Word, lambda w : w.serialise())
         
-        sqlite.register_converter("User", User.deserialise)
-        sqlite.register_converter("Word", Word.deserialise)
+        sqlite.register_converter('User', User.deserialise)
+        sqlite.register_converter('Word', Word.deserialise)
         
     def commit(self):
         self.db.commit()
@@ -51,19 +51,19 @@ class DBManager(object):
 class UserManager(DBManager):
     def add_user(self, user):
         try:
-            self.c.execute("INSERT INTO users VALUES (?, ?)", (user.username, user))
+            self.c.execute('INSERT INTO users VALUES (?, ?)', (user.username, user))
             return True
         except sqlite.IntegrityError:
             return False
         
     def update_user(self, user):
-        self.c.execute("UPDATE users SET user=? WHERE username=?", (user, user.username))
+        self.c.execute('UPDATE users SET user=? WHERE username=?', (user, user.username))
             
     def retrieve_user(self, user):        
         try:
-            self.c.execute("SELECT user FROM users WHERE username=?", (user.username,))
+            self.c.execute('SELECT user FROM users WHERE username=?', (user.username,))
         except AttributeError:
-            self.c.execute("SELECT user FROM users WHERE username=?", (user,))
+            self.c.execute('SELECT user FROM users WHERE username=?', (user,))
         
         users = self.c.fetchone()
         
@@ -73,7 +73,7 @@ class UserManager(DBManager):
             return None
             
     def retrieve_users(self):
-        self.c.execute("SELECT user FROM users")
+        self.c.execute('SELECT user FROM users')
         
         users = []
         
@@ -83,7 +83,7 @@ class UserManager(DBManager):
         return users
         
     def retrieve_usernames(self):
-        self.c.execute("SELECT username FROM users")
+        self.c.execute('SELECT username FROM users')
         
         usernames = []
         
@@ -94,23 +94,23 @@ class UserManager(DBManager):
             
     def remove_user(self, user):        
         try:
-            self.c.execute("DELETE FROM users WHERE username=?", (user.username,))
+            self.c.execute('DELETE FROM users WHERE username=?', (user.username,))
         except AttributeError:
-            self.c.execute("DELETE FROM users WHERE username=?", (user,))
+            self.c.execute('DELETE FROM users WHERE username=?', (user,))
 
 class WordManager(DBManager):    
     def add_word(self, word):
         try:
-            self.c.execute("INSERT INTO words VALUES (?, ?)", (word.word, word))
+            self.c.execute('INSERT INTO words VALUES (?, ?)', (word.word, word))
             return True
         except sqlite.IntegrityError:
             return False
         
     def retrieve_word(self, word):
         try:
-            self.c.execute("SELECT word FROM words WHERE string=?", (word.word,))
+            self.c.execute('SELECT word FROM words WHERE string=?', (word.word,))
         except AttributeError:
-            self.c.execute("SELECT word FROM words WHERE string=?", (word,))
+            self.c.execute('SELECT word FROM words WHERE string=?', (word,))
         
         word = self.c.fetchone()
         
@@ -120,7 +120,7 @@ class WordManager(DBManager):
             return None
         
     def retrieve_words_of_difficulty(self, difficulty):
-        self.c.execute("SELECT word FROM words")
+        self.c.execute('SELECT word FROM words')
         
         words = []
         
@@ -132,6 +132,6 @@ class WordManager(DBManager):
    
     def remove_word(self, word):
         try:
-            self.c.execute("DELETE FROM words WHERE string=?", (word.word,))
+            self.c.execute('DELETE FROM words WHERE string=?', (word.word,))
         except AttributeError:
-            self.c.execute("DELETE FROM words WHERE string=?", (word,))
+            self.c.execute('DELETE FROM words WHERE string=?', (word,))

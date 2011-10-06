@@ -38,7 +38,7 @@ class Session(object):
         um.update_user(self.user)
         um.commit()
                 
-        self.interface.session_ended(str(self.score) + "/" + str(self.list_length), str(self.highscore) + "/" + str(self.list_length), self.newhighscore, self.attempts)
+        self.interface.session_ended(str(self.score) + '/' + str(self.list_length), str(self.highscore) + '/' + str(self.list_length), self.newhighscore, self.attempts)
         
     def next(self):
         
@@ -59,8 +59,8 @@ class Session(object):
     
     def update_interface(self):
         self.interface.update(self.wordlist.words[self.word].definition, 
-              str(self.score) + "/" + str(len(self.wordlist.words)),
-              str(self.highscore) + "/" + str(len(self.wordlist.words)),
+              str(self.score) + '/' + str(len(self.wordlist.words)),
+              str(self.highscore) + '/' + str(len(self.wordlist.words)),
               self.correct)
 
     def check(self, word):

@@ -16,9 +16,9 @@ class DateEntry(Frame):
         self.arrange()
         
     def build(self):
-        self.day_lbl = Label(self, text="Day:")
-        self.month_lbl = Label(self, text="Month:")
-        self.year_lbl = Label(self, text="Year:")
+        self.day_lbl = Label(self, text='Day:')
+        self.month_lbl = Label(self, text='Month:')
+        self.year_lbl = Label(self, text='Year:')
         
         self.defaults = [1, 1, 2000]
         self.date = datetime.date(self.defaults[2], self.defaults[1], self.defaults[0])
@@ -32,7 +32,7 @@ class DateEntry(Frame):
         
         for i, var in enumerate(self.vars):
             var.set(self.defaults[i])
-            var.trace("w", self.validate)
+            var.trace('w', self.validate)
         
         days = []
         months = []
@@ -56,7 +56,7 @@ class DateEntry(Frame):
         
     def arrange(self):
         for i, w in enumerate(self.widgets):
-            w.grid(column=i, row=0, padx=2, pady=2, sticky="we")
+            w.grid(column=i, row=0, padx=2, pady=2, sticky='we')
             
     def get(self):
         return self.date
@@ -65,7 +65,7 @@ class DateEntry(Frame):
         try:
             self.date = datetime.date(self.year_var.get(), self.month_var.get(), self.day_var.get())
         except ValueError:
-            tkMessageBox.showerror("Date error", "Please enter a valid date!")
+            tkMessageBox.showerror('Date error', 'Please enter a valid date!')
             for i, var in enumerate(self.vars):
                 var.set(self.defaults[i])
 
@@ -126,7 +126,7 @@ class MultiScrollListbox(Frame):
         
         for i in range(0, len(self.items[0])):
             self.listboxes.append(Listbox(self, yscrollcommand=self.scrollbar.set,
-                                  selectmode="single", borderwidth=0, 
+                                  selectmode='single', borderwidth=0, 
                                   selectborderwidth=0, exportselection=0))
 
         self.scrollbar.config(command=self.on_vertical_scrollbar)
@@ -139,10 +139,10 @@ class MultiScrollListbox(Frame):
 
     def bind(self):
         for listbox in self.listboxes:
-            listbox.bind("<MouseWheel>", self.on_mwheel)
-            listbox.bind("<Button-4>", self.on_mwheel)
-            listbox.bind("<Button-5>", self.on_mwheel)
-            listbox.bind("<<ListboxSelect>>", self.on_listbox_select)
+            listbox.bind('<MouseWheel>', self.on_mwheel)
+            listbox.bind('<Button-4>', self.on_mwheel)
+            listbox.bind('<Button-5>', self.on_mwheel)
+            listbox.bind('<<ListboxSelect>>', self.on_listbox_select)
 
                             
     def on_vertical_scrollbar(self, *args):
@@ -157,9 +157,9 @@ class MultiScrollListbox(Frame):
         else:                   # Windows & OSX
             delta = event.delta
         for lb in self.listboxes:
-            lb.yview("scroll", delta, "units")
+            lb.yview('scroll', delta, 'units')
             
-        return "break"
+        return 'break'
     
     def on_listbox_select(self, event):
         lindex = int(event.widget.curselection()[0])
@@ -197,7 +197,7 @@ class ScrollListbox(Frame):
     def insert(self, name, item):
         self.items[name] = item
         
-    def delete(self, name="", item=None):
+    def delete(self, name='', item=None):
         try:
             del self.items[name]
         except KeyError:
@@ -210,7 +210,7 @@ class ScrollListbox(Frame):
         self.listbox.insert(END, *sorted(self.items.keys()))
 
 class Dialog(Toplevel):
-    def __init__(self, parent, title = None, btncolumn=100, btnrow=100):
+    def __init__(self, parent, title=None, btncolumn=100, btnrow=100):
         Toplevel.__init__(self, parent)
         self.transient(parent)
         self.resizable(False, False)
@@ -224,16 +224,16 @@ class Dialog(Toplevel):
         self.arrange()
         self.buttonbox(btncolumn, btnrow)
 
-#        body.grid(row=0, column=0, padx=5, pady=5, sticky="nswe")
+#        body.grid(row=0, column=0, padx=5, pady=5, sticky='nswe')
         
         # Disable other windows
         self.grab_set()
 
         # Handle the window being closed by the window manager
-        self.protocol("WM_DELETE_WINDOW", self.cancel)
+        self.protocol('WM_DELETE_WINDOW', self.cancel)
 
         # Arrange the window relative to the parent
-        self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
+        self.geometry('+%d+%d' % (parent.winfo_rootx()+50,
                                   parent.winfo_rooty()+50))
 
         # Wait until the dialog is closed
@@ -258,15 +258,15 @@ class Dialog(Toplevel):
 
         box = Frame(self)
 
-        w = Button(box, text="OK", width=10, command=self.ok, default=ACTIVE)
+        w = Button(box, text='OK', width=10, command=self.ok, default=ACTIVE)
         w.grid(column=0, row=0, padx=5, pady=2)
-        w = Button(box, text="Cancel", width=10, command=self.cancel)
+        w = Button(box, text='Cancel', width=10, command=self.cancel)
         w.grid(column=1, row=0, padx=5, pady=2)
 
-        self.bind("<Return>", self.ok)
-        self.bind("<Escape>", self.cancel)
+        self.bind('<Return>', self.ok)
+        self.bind('<Escape>', self.cancel)
 
-        box.grid(column=btncolumn, row=btnrow, sticky="se")
+        box.grid(column=btncolumn, row=btnrow, sticky='se')
 
     #
     # standard button semantics

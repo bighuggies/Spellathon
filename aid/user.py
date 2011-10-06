@@ -15,10 +15,10 @@ class User(object):
         self.dob = dob
         
         try:
-            shutil.copy(photo, ".userimages/" + username + ".gif")
+            shutil.copy(photo, '.userimages/' + username + '.gif')
             self.photo = photo
         except IOError:
-            self.photo = ".userimages/nophoto.gif"
+            self.photo = '.userimages/nophoto.gif'
         
         if scores:
             self.scores = scores
@@ -29,7 +29,7 @@ class User(object):
         scores = pickle.dumps(self.scores)
         
         
-        return "%s|%s|%s|%s|%s|%s" % (self.username,
+        return '%s|%s|%s|%s|%s|%s' % (self.username,
                                       self.realname,
                                       self.password,
                                       self.dob,
@@ -38,7 +38,7 @@ class User(object):
         
     @classmethod
     def deserialise(cls, string):
-        parts = string.split("|")
+        parts = string.split('|')
         parts[-1] = pickle.loads(parts[-1])
         
         return cls(*parts)
