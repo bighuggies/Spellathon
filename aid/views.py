@@ -15,6 +15,8 @@ from models import TLDROptionMenuModel
 
 pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
+helv12 = {"font" : ("Helvetica", 12)}
+helv16 = {"font" : ("Helvetica", 16)}
 
 class NewWord(Dialog):
     def build(self):
@@ -195,7 +197,8 @@ class Logon(Toplevel):
         self.arrange()
         
     def build(self):
-        self.logo = PhotoImage(file="placeholder.gif")
+        self.heading_lbl = Label(self, text="SPELLATHON", **helv16)
+        self.logo = PhotoImage(file="images/main.gif")
         self.logo_lbl = Label(self, image=self.logo)
         
         self.loginframe = LabelFrame(self, text="Login", **pad5)
@@ -212,11 +215,12 @@ class Logon(Toplevel):
 
         self.administrate_btn = Button(self, text="Administrate")
 
-        self.elements = [self.logo_lbl, self.loginframe, self.administrate_btn]
+        self.elements = [self.logo_lbl, self.heading_lbl, self.loginframe, self.administrate_btn]
         
         self.username_ebx.focus_set()
         
     def arrange(self):
+        
         # Arrange the picture, the login fields, and the administration panel
         for i, element in enumerate(self.elements):
             element.grid(column=0, row=i, sticky="we", **pad5)
@@ -375,24 +379,24 @@ class WelcomeScreen(Toplevel):
         self.score_img = PhotoImage(file="images/score.gif")
         
         self.welcome_frame = LabelFrame(self, text="Welcome", **pad5)
-        self.welcome_lbl = Label(self.welcome_frame, text="Welcome " + self.user.realname + "!", font=("Helvetica", "16"))
+        self.welcome_lbl = Label(self.welcome_frame, text="Welcome " + self.user.realname + "!", **helv16)
         self.spelling_btn = Button(self.welcome_frame, text="Begin Spelling", 
-                                   command=self.spelling_aid, image=self.spelling_img, compound=BOTTOM, font=("Helvetica", "16"))
+                                   command=self.spelling_aid, image=self.spelling_img, compound=BOTTOM, **helv16)
         self.score_btn = Button(self.welcome_frame, text="View Scores", 
-                                command=self.score_frame, image=self.score_img, compound=BOTTOM, font=("Helvetica", "16"))
+                                command=self.score_frame, image=self.score_img, compound=BOTTOM, **helv16)
         
     def arrange(self):
         self.welcome_frame.grid(**pad5)
         self.welcome_lbl.grid(**pad2)
-        self.spelling_btn.grid(**pad2)
-        self.score_btn.grid(**pad2)
+        self.spelling_btn.grid(sticky="we", **pad2)
+        self.score_btn.grid(sticky="we", **pad2)
         
     def spelling_aid(self):
         sa = SpellingAid(self.user, master=self.master)
         self.destroy()
         
     def score_frame(self):
-        sc = Score(self)
+        sc = Score(self.user, master=self)
         
 class SpellingAid(Toplevel):
     def __init__(self, user, master=None):
@@ -409,7 +413,7 @@ class SpellingAid(Toplevel):
     def build(self):
         
         self.lists_frame = LabelFrame(self, text="Get started", **pad5)
-        self.lists_lbl = Label(self.lists_frame, text="Choose a list to begin spelling!", font=("Helvetica", "12"))
+        self.lists_lbl = Label(self.lists_frame, text="Choose a list to begin spelling!", **helv12)
         self.lists_var = StringVar()
         self.lists_opt = OptionMenu(self.lists_frame, self.lists_var, "")
         self.lists_opt.config(anchor="w")
@@ -421,10 +425,9 @@ class SpellingAid(Toplevel):
         self.start_spelling_btn = Button(self.lists_frame, text="Start", command=self.start_session, 
                                          image=self.start_spelling_img, compound=CENTER, font=("Helvetica", "14"), relief=FLAT)
         
-        self.word_lbl = Label(self, text="Enter the word you hear and click submit!", font=("Helvetica", "12"))
+        self.word_lbl = Label(self, text="Enter the word you hear and click submit!", **helv12)
         self.word_ebx= Entry(self, font=("Helvetica", "24"), width=30, state=DISABLED)
         self.word_submit_img = PhotoImage(file="images/submit.gif")
-        self.word_submit_btn = Button(self, image=self.word_submit_img, command=self.submit, state=DISABLED, relief=FLAT)
 
         self.example_img = PhotoImage(file="images/example.gif")
         self.speak_img = PhotoImage(file="images/speak.gif")
@@ -433,17 +436,18 @@ class SpellingAid(Toplevel):
         
         self.buttons = Frame(self, padx=5, pady=20)
         
-        self.definition_lbl= Label(self.word_metadata, text="Definition:", font=("Helvetica", "12"))
-        self.word_definition_lbl = Text(self.word_metadata, height=10, state=DISABLED, font=("Helvetica", "10"))
+        self.word_submit_btn = Button(self.buttons, image=self.word_submit_img, command=self.submit, state=DISABLED, relief=FLAT)
+        self.definition_lbl= Label(self.word_metadata, text="Definition:", **helv12)
+        self.word_definition_lbl = Text(self.word_metadata, height=5, state=DISABLED, font=("Helvetica", "10"))
         self.speak_again_btn = Button(self.buttons, text="Speak again", state=DISABLED, image=self.speak_img, compound=BOTTOM, relief=FLAT)
         self.example_btn = Button(self.buttons, text="Example", state=DISABLED, image=self.example_img, compound=BOTTOM, relief=FLAT)
         
         
         self.score_frame = LabelFrame(self, text="Score", **pad5)
-        self.score_lbl = Label(self.score_frame, text="Score:", font=("Helvetica", "12"))
-        self.current_score_lbl= Label(self.score_frame, text="0/0", font=("Helvetica", "16"))
-        self.high_score_lbl = Label(self.score_frame, text="High score:", font=("Helvetica", "12"))
-        self.current_high_score_lbl = Label(self.score_frame, text="n/a", font=("Helvetica", "16"))
+        self.score_lbl = Label(self.score_frame, text="Score:", **helv12)
+        self.current_score_lbl= Label(self.score_frame, text="0/0", **helv16)
+        self.high_score_lbl = Label(self.score_frame, text="High score:", **helv12)
+        self.current_high_score_lbl = Label(self.score_frame, text="n/a", **helv16)
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
@@ -460,7 +464,7 @@ class SpellingAid(Toplevel):
         
         self.word_lbl.grid(column=0, row=2, columnspan=2, sticky="nswe", padx=20, pady=2)
         self.word_ebx.grid(column=0, row=3, padx=20, pady=2)
-        self.word_submit_btn.grid(column=0, row=4, sticky="we", padx=20, pady=2)
+        self.word_submit_btn.grid(column=2, row=0, sticky="we", padx=20, pady=2)
         self.buttons.grid(column=0, row=5, columnspan=2)
         self.word_metadata.grid(column=0, row=6, sticky="we", columnspan=2, **pad5)
         
@@ -510,6 +514,13 @@ class SpellingAid(Toplevel):
         self.current_score_lbl.config(text="0/0")
         self.high_score_lbl.config(text="High score:")
         self.current_high_score_lbl.config(text="n/a")
+        self.word_ebx.delete(0, END)
+        
+        self.word_definition_lbl.config(state=NORMAL)
+        self.word_definition_lbl.delete(1.0, END)
+        self.word_definition_lbl.config(state=DISABLED)
+        
+        self.word_lbl.config(text="Enter the word you hear and click submit!")
         
         self.lists_opt.config(state=NORMAL)
         
@@ -522,7 +533,7 @@ class SpellingAid(Toplevel):
         
         self.session = None
         
-    def update(self, definition, score, highscore):
+    def update(self, definition, score, highscore, correct):
         self.word_definition_lbl.config(state=NORMAL)
         self.word_definition_lbl.delete(1.0, END)
         self.word_definition_lbl.insert(END, definition)
@@ -530,6 +541,13 @@ class SpellingAid(Toplevel):
         
         self.current_score_lbl.config(text=score)
         self.current_high_score_lbl.config(text=highscore)
+        
+        if correct == True:
+            self.word_lbl.config(text="Well done!")
+        elif correct == False:
+            self.word_lbl.config(text="Better luck next time")
+        elif correct == None:
+            self.word_lbl.config(text="Enter the word you hear and click submit!")
         
     def submit(self, *args):
         self.session.check(self.word_ebx.get())
@@ -549,10 +567,10 @@ class SpellingComplete(Dialog):
         self.list_complete_lbl = Label(self, text="You have completed " + self.list)
 
         self.score_frame = LabelFrame(self, text="Score", **pad5)
-        self.score_lbl = Label(self.score_frame, text="Score:", font=("Helvetica", "12"))
-        self.current_score_lbl= Label(self.score_frame, text=str(self.score), font=("Helvetica", "16"))
-        self.high_score_lbl = Label(self.score_frame, text="High score:", font=("Helvetica", "12"))
-        self.current_high_score_lbl = Label(self.score_frame, text=str(self.highscore), font=("Helvetica", "16"))
+        self.score_lbl = Label(self.score_frame, text="Score:", **helv12)
+        self.current_score_lbl= Label(self.score_frame, text=str(self.score), **helv16)
+        self.high_score_lbl = Label(self.score_frame, text="High score:", **helv12)
+        self.current_high_score_lbl = Label(self.score_frame, text=str(self.highscore), **helv16)
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
@@ -563,14 +581,14 @@ class SpellingComplete(Dialog):
         
         for key, value in self.attempts.iteritems():
             if key == value:
-                self.attempt_keys.append(Label(self.attempts_frame, text=key + ":", font=("Helvetica", "12")))
-                self.attempt_values.append(Label(self.attempts_frame, text=value, font=("Helvetica", "12")))
+                self.attempt_keys.append(Label(self.attempts_frame, text=key + ":", **helv12))
+                self.attempt_values.append(Label(self.attempts_frame, text=value, **helv12))
             else:
-                self.attempt_keys.append(Label(self.attempts_frame, text=key + ":", fg="red", font=("Helvetica", "12")))
-                self.attempt_values.append(Label(self.attempts_frame, text=value, fg="red", font=("Helvetica", "12")))
+                self.attempt_keys.append(Label(self.attempts_frame, text=key + ":", fg="red", **helv12))
+                self.attempt_values.append(Label(self.attempts_frame, text=value, fg="red", **helv12))
 
         if self.newhighscore:
-            self.congratulations_lbl = Label(self, text="New high score!", fg="orange", font=("Helvetica", "16"))
+            self.congratulations_lbl = Label(self, text="New high score!", fg="orange", **helv16)
         else:
             self.congratulations_lbl = Label(self, text="Well done!", fg="brown", font=("Helvetica", "14"))
         
@@ -598,37 +616,71 @@ class SpellingComplete(Dialog):
         for i, widget in enumerate(self.score_elements):
             widget.grid(column=0, row=i, sticky="w", **pad2)
 
-class Score(Dialog):        
-    def build(self):
-        self.list_frame = LabelFrame(self, text="Lists", **pad5)
-        self.lists_lbx = ScrollListbox(self.list_frame)
-        
+class Score(Dialog):
+    def __init__(self, user, master=None):
+        self.user = user
+        Dialog.__init__(self, master, btncolumn=0)
+          
+    def build(self):        
         self.list_metadata = LabelFrame(self, text="Score", **pad5)
         
-        self.num_words_lbl = Label(self.list_metadata, text="Number of words:")
-        self.difficulty_lbl = Label(self.list_metadata, text="Difficulty:")
-        self.num_attempts_lbl = Label(self.list_metadata, text="Number of attempts:")
-        self.high_score_lbl = Label(self.list_metadata, text="High score_frame:")
+        self.num_words_lbl = Label(self.list_metadata, text="Number of words:", **helv12)
+        self.difficulty_lbl = Label(self.list_metadata, text="Average word length:", **helv12)
+        self.num_attempts_lbl = Label(self.list_metadata, text="Number of attempts:", **helv12)
+        self.high_score_lbl = Label(self.list_metadata, text="High score:", **helv12)
         self.list_metadata_labels = [self.num_words_lbl, self.difficulty_lbl, 
                                      self.num_attempts_lbl, self.high_score_lbl]
         
-        self.list_num_words_lbl = Label(self.list_metadata, text="0")
-        self.list_difficulty_lbl = Label(self.list_metadata, text="None")
-        self.list_num_attempts_lbl = Label(self.list_metadata, text="0")
-        self.list_high_score_lbl = Label(self.list_metadata, text="0")
+        self.list_num_words_lbl = Label(self.list_metadata, text="0", **helv16)
+        self.list_difficulty_lbl = Label(self.list_metadata, text="None", **helv16)
+        self.list_num_attempts_lbl = Label(self.list_metadata, text="0", **helv16)
+        self.list_high_score_lbl = Label(self.list_metadata, text="0", **helv16)
         self.list_metadata_fields = [self.list_num_words_lbl, self.list_difficulty_lbl,
                                      self.list_num_attempts_lbl, self.list_high_score_lbl]
         
+        self.lists_frame = LabelFrame(self, text="Lists", **pad5)
+        self.lists_var = StringVar()
+        self.lists_opt = OptionMenu(self.lists_frame, self.lists_var, "")
+        self.lists_opt.config(anchor="w")
+        self.lists_model = TLDROptionMenuModel(self.lists_opt, self.lists_var)
+
+        self.lists_var.trace("w", self.update_metadata)
+
+
         
     def arrange(self):
-        self.list_frame.grid(column=0, row=0, sticky="nswe", **pad5)
-        self.lists_lbx.grid(**pad2)
+        self.lists_frame.grid(column=0, row=0, sticky="nswe", **pad5)
+        self.lists_opt.grid(sticky="we", **pad2)
         
-        self.list_metadata.grid(column=1, row=0, sticky="nswe", **pad5)
+        self.list_metadata.grid(column=0, row=1, sticky="nswe", **pad5)
                 
         for i, label in enumerate(self.list_metadata_labels):
             label.grid(column=0, row=i, sticky="w", **pad2)
         
         j = 0
         for i, label in enumerate(self.list_metadata_fields):
-            label.grid(column=1, row=i, sticky="w",  **pad2)        
+            label.grid(column=1, row=i, sticky="w",  **pad2)
+            
+    def update_metadata(self, *args):
+        wordlist = self.lists_model.get_list()
+
+        self.list_num_words_lbl.config(text=str(len(wordlist.words)))
+        
+        length = 0
+        
+        for key in wordlist.words.iterkeys():
+            length += len(key)
+            
+        difficulty = length/len(wordlist.words.keys())
+        
+        self.list_difficulty_lbl.config(text=str(difficulty))
+        
+        try:
+            attempts = len(self.user.scores[wordlist.name])
+        except KeyError:
+            attempts = 0
+            
+        self.list_num_attempts_lbl.config(text=str(attempts))
+        
+        highscore = self.user.high_score(wordlist.name)
+        self.list_high_score_lbl.config(text=str(highscore))
