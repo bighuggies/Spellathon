@@ -169,9 +169,10 @@ class UserManagement(Frame):
         for i, control in enumerate(self.controls):
             control.grid(column=1, row=i, sticky="we", padx=5, pady=2)
         
-class Administration(Toplevel):
+class Administration(Frame):
     def __init__(self, master=None):
-        Toplevel.__init__(self, master)
+        Frame.__init__(self, master)
+        self.title("Administration")
         self.resizable(False, False)
         self.build()
         self.arrange()
@@ -187,14 +188,16 @@ class Administration(Toplevel):
     def arrange(self):
         self.tabs.grid(row=0, column=0)
 
-class Logon(Toplevel):
+class Logon(Frame):
     def __init__(self, master=None):
-        Toplevel.__init__(self, master)
-        self.title("Spellathon Logon")
-        self.resizable(False, False)
-        self.bind("<Return>", self.validate)
+        Frame.__init__(self, master)
+        self.master.title("Spellathon Logon")
+        self.master.bind("<Return>", self.validate)
+        
         self.build()
         self.arrange()
+        
+        self.username_ebx.focus_set()
         
     def build(self):
         self.heading_lbl = Label(self, text="SPELLATHON", **helv16)
@@ -217,7 +220,6 @@ class Logon(Toplevel):
 
         self.elements = [self.logo_lbl, self.heading_lbl, self.loginframe, self.administrate_btn]
         
-        self.username_ebx.focus_set()
         
     def arrange(self):
         
@@ -230,10 +232,12 @@ class Logon(Toplevel):
             widget.grid(column=0, row=i, sticky="we", **pad2)
             
     def new_user(self):
-        nu = NewUser(self, btncolumn=0)
+        nu = NewUser(self, title="Create new user", btncolumn=0)
         
-    def welcome_screen(self, user):
+    def exit(self, user):
         ws = WelcomeScreen(user, master=self.master)
+        self.destroy()
+        ws.pack()
         
     def validate(self, *args):
         username = self.username_ebx.get()
@@ -244,7 +248,7 @@ class Logon(Toplevel):
         
         if user:
             if user.password == password:
-                self.welcome_screen(user)
+                self.exit(user)
                 self.destroy()
             else:
                 tkMessageBox.showerror("Error", "Incorrect password")
@@ -366,13 +370,19 @@ class CreateAdmin(Dialog):
         self.password_confirm_ebx.grid(column=1, row=2, sticky="w", **pad2)
         self.frame.grid(sticky="we", **pad5)
         
-class WelcomeScreen(Toplevel):
+class WelcomeScreen(Frame):
     def __init__(self, user, master=None):
-        Toplevel.__init__(self, master)
-        self.resizable(False, False)
+        Frame.__init__(self, master)
+        self.master.title("Welcome to Spellathon")
+        self.master.bind("<Return>", self.spelling_aid)
+        self.master.bind("<Escape>", self.log_out)
+
         self.user = user
+        
         self.build()
         self.arrange()
+        
+        self.spelling_btn.focus_set()
         
     def build(self):
         self.spelling_img = PhotoImage(file="images/spbee.gif")
@@ -396,25 +406,32 @@ class WelcomeScreen(Toplevel):
     def spelling_aid(self):
         sa = SpellingAid(self.user, master=self.master)
         self.destroy()
+        sa.pack()
         
     def score_frame(self):
-        sc = Score(self.user, master=self)
+        sc = Score(self.user, master=self, title=self.user.realname + " Scores")
         
-    def log_out(self):
-        ln = Logon(master=self.master)
-        self.destroy()
-        
-class SpellingAid(Toplevel):
+    def log_out(self, *args):
+        if tkMessageBox.askokcancel("Log out", "Are you sure you want to log out?"):
+            ln = Logon(master=self.master)
+            self.master.unbind("<Escape>")
+            self.destroy()
+            ln.pack()
+                    
+class SpellingAid(Frame):
     def __init__(self, user, master=None):
-        Toplevel.__init__(self, master)
-        self.resizable(False, False)
-        self.bind("<Return>", self.submit)
-        
-        self.build()
-        self.arrange()
+        Frame.__init__(self, master)
+        self.master.title("Spellathon Spelling Aid")
+        self.master.bind("<Return>", self.submit)
+        self.master.bind("<Escape>", self.exit)
         
         self.user = user
         self.session = None
+
+        self.build()
+        self.arrange()
+        
+        self.start_spelling_btn.focus_set()
         
     def build(self):
         
@@ -460,9 +477,8 @@ class SpellingAid(Toplevel):
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
-        self.exit_btn= Button(self, text="Exit", command=self.welcome_screen)
+        self.exit_btn= Button(self, text="Exit", command=self.exit)
         
-        self.start_spelling_btn.focus_set()
                 
     def arrange(self):
         self.lists_frame.grid(column=0, row=0, sticky="we", **pad5)
@@ -490,12 +506,14 @@ class SpellingAid(Toplevel):
         self.speak_again_btn.grid(column=0, row=0, sticky="nswe", **pad2)
         self.example_btn.grid(column=1, row=0, sticky="nswe", **pad2)
         
-    def welcome_screen(self):
-        if self.session:
-            self.end_session()
-        
-        ws = WelcomeScreen(self.user, master=self.master)
-        self.destroy()
+    def exit(self, *args):
+        if tkMessageBox.askokcancel("Exit", "Are you sure you want to exit? Your progress will be saved."):
+            if self.session:
+                self.end_session()
+            
+            ws = WelcomeScreen(self.user, master=self.master)
+            self.destroy()
+            ws.pack()
         
     def start_session(self):
         self.start_spelling_btn.config(text="Stop", command=self.end_session, image=self.stop_spelling_img)
@@ -537,7 +555,7 @@ class SpellingAid(Toplevel):
         self.word_ebx.config(state=DISABLED)
         self.word_submit_btn.config(state=DISABLED)
         
-        sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts)
+        sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts, title="Spelling complete")
         
         self.session = None
         
@@ -562,7 +580,7 @@ class SpellingAid(Toplevel):
         self.word_ebx.delete(0, END)
         
 class SpellingComplete(Dialog):
-    def __init__(self, master, listname, score, highscore, newhighscore, attempts):
+    def __init__(self, master, listname, score, highscore, newhighscore, attempts, title=None):
         self.list = listname
         self.score = score
         self.highscore = highscore
@@ -625,9 +643,9 @@ class SpellingComplete(Dialog):
             widget.grid(column=0, row=i, sticky="w", **pad2)
 
 class Score(Dialog):
-    def __init__(self, user, master=None):
+    def __init__(self, user, master=None, title=None):
         self.user = user
-        Dialog.__init__(self, master, btncolumn=0)
+        Dialog.__init__(self, master, btncolumn=0, title=title)
           
     def build(self):        
         self.list_metadata = LabelFrame(self, text="Score", **pad5)
