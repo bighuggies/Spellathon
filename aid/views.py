@@ -14,7 +14,7 @@ from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
 from models import TLDROptionMenuModel
 
 '''
-
+Option constants for widgets
 
 '''
 pad2 = {'padx' : 2, 'pady' : 2}

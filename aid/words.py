@@ -1,7 +1,12 @@
 '''
-Created on 5/10/2011
+Module to represent words and lists of words
 
-@author: andrew
+Exported classes:
+
+Word -- Represents a word with a related definition, example use, and difficulty
+level.
+WordList -- Manages lists of words.
+
 '''
 class Word(object):
     '''Represents a word with a related definition, example use, and difficulty
