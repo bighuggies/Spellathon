@@ -19,6 +19,7 @@ class Session(object):
         self.highscore = self.user.high_score(listname.name)
         self.attempts = {}
         self.newhighscore = False
+        self.correct = None
                 
     def start(self):
         self.words = self.wordlist.words.keys()
@@ -57,14 +58,15 @@ class Session(object):
     def update_interface(self):
         self.interface.update(self.wordlist.words[self.word].definition, 
               str(self.score) + "/" + str(len(self.wordlist.words)),
-              str(self.highscore) + "/" + str(len(self.wordlist.words)))
+              str(self.highscore) + "/" + str(len(self.wordlist.words)),
+              self.correct)
 
     def check(self, word):
         self.attempts[self.word] = word
         
         if self.word == word:
             self.score += 1
-            
+            self.correct = True
             if self.score > self.highscore:
                 self.highscore = self.score
                 self.newhighscore = True
@@ -72,5 +74,6 @@ class Session(object):
             self.next()
             return True
         else:
+            self.correct = False
             self.next()
             return False
