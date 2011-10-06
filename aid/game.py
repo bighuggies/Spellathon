@@ -50,9 +50,11 @@ class Session(object):
             self.end()
             
     def speak_example(self):
+        self.speech.kill()
         self.speech.speak(self.wordlist.words[self.word].example)
     
     def speak_word(self):
+        self.speech.kill()
         self.speech.speak(self.word)
     
     def update_interface(self):

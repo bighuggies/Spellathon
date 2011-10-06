@@ -188,8 +188,8 @@ class Administration(Toplevel):
         self.tabs.grid(row=0, column=0)
 
 class Logon(Toplevel):
-    def __init__(self, parent=None):
-        Toplevel.__init__(self, parent)
+    def __init__(self, master=None):
+        Toplevel.__init__(self, master)
         self.title("Spellathon Logon")
         self.resizable(False, False)
         self.bind("<Return>", self.validate)
@@ -384,12 +384,14 @@ class WelcomeScreen(Toplevel):
                                    command=self.spelling_aid, image=self.spelling_img, compound=BOTTOM, **helv16)
         self.score_btn = Button(self.welcome_frame, text="View Scores", 
                                 command=self.score_frame, image=self.score_img, compound=BOTTOM, **helv16)
+        self.logout_btn = Button(self, text="Log out", command=self.log_out, **pad5)
         
     def arrange(self):
         self.welcome_frame.grid(**pad5)
         self.welcome_lbl.grid(**pad2)
         self.spelling_btn.grid(sticky="we", **pad2)
         self.score_btn.grid(sticky="we", **pad2)
+        self.logout_btn.grid(sticky="we", **pad5)
         
     def spelling_aid(self):
         sa = SpellingAid(self.user, master=self.master)
@@ -397,6 +399,10 @@ class WelcomeScreen(Toplevel):
         
     def score_frame(self):
         sc = Score(self.user, master=self)
+        
+    def log_out(self):
+        ln = Logon(master=self.master)
+        self.destroy()
         
 class SpellingAid(Toplevel):
     def __init__(self, user, master=None):
@@ -425,7 +431,7 @@ class SpellingAid(Toplevel):
         self.start_spelling_btn = Button(self.lists_frame, text="Start", command=self.start_session, 
                                          image=self.start_spelling_img, compound=CENTER, font=("Helvetica", "14"), relief=FLAT)
         
-        self.word_lbl = Label(self, text="Enter the word you hear and click submit!", **helv12)
+        self.word_lbl = Label(self, text="Enter the word you hear and click submit!", **helv16)
         self.word_ebx= Entry(self, font=("Helvetica", "24"), width=30, state=DISABLED)
         self.word_submit_img = PhotoImage(file="images/submit.gif")
 
@@ -436,12 +442,15 @@ class SpellingAid(Toplevel):
         
         self.buttons = Frame(self, padx=5, pady=20)
         
-        self.word_submit_btn = Button(self.buttons, image=self.word_submit_img, command=self.submit, state=DISABLED, relief=FLAT)
-        self.definition_lbl= Label(self.word_metadata, text="Definition:", **helv12)
-        self.word_definition_lbl = Text(self.word_metadata, height=5, state=DISABLED, font=("Helvetica", "10"))
-        self.speak_again_btn = Button(self.buttons, text="Speak again", state=DISABLED, image=self.speak_img, compound=BOTTOM, relief=FLAT)
-        self.example_btn = Button(self.buttons, text="Example", state=DISABLED, image=self.example_img, compound=BOTTOM, relief=FLAT)
+        self.word_submit_btn = Button(self.buttons, text="Submit", compound=TOP,
+                                      image=self.word_submit_img, command=self.submit, state=DISABLED, relief=FLAT, font=("Helvetica", "10"))
+        self.speak_again_btn = Button(self.buttons, text="Speak again", state=DISABLED,
+                                      image=self.speak_img, compound=TOP, relief=FLAT, font=("Helvetica", "10"))
+        self.example_btn = Button(self.buttons, text="Example", state=DISABLED,
+                                  image=self.example_img, compound=TOP, relief=FLAT, font=("Helvetica", "10"))
         
+        self.word_definition_lbl = Text(self.word_metadata, height=5, state=DISABLED, font=("Helvetica", "10"))
+        self.definition_lbl= Label(self.word_metadata, text="Definition:", **helv12)
         
         self.score_frame = LabelFrame(self, text="Score", **pad5)
         self.score_lbl = Label(self.score_frame, text="Score:", **helv12)
@@ -456,7 +465,7 @@ class SpellingAid(Toplevel):
         self.start_spelling_btn.focus_set()
                 
     def arrange(self):
-        self.lists_frame.grid(column=0, row=0, **pad5)
+        self.lists_frame.grid(column=0, row=0, sticky="we", **pad5)
         
         self.lists_lbl.grid(column=0, row=0, sticky="nswe", padx=5, pady=2)
         self.lists_opt.grid(column=0, row=1, sticky="nswe", padx=5, pady=2)
@@ -512,7 +521,6 @@ class SpellingAid(Toplevel):
     def session_ended(self, score, highscore, newhighscore, attempts):
         self.start_spelling_btn.config(text="Start", command=self.start_session, image=self.start_spelling_img)
         self.current_score_lbl.config(text="0/0")
-        self.high_score_lbl.config(text="High score:")
         self.current_high_score_lbl.config(text="n/a")
         self.word_ebx.delete(0, END)
         
@@ -520,7 +528,7 @@ class SpellingAid(Toplevel):
         self.word_definition_lbl.delete(1.0, END)
         self.word_definition_lbl.config(state=DISABLED)
         
-        self.word_lbl.config(text="Enter the word you hear and click submit!")
+        self.word_lbl.config(text="Enter the word you hear and click submit!", fg="black")
         
         self.lists_opt.config(state=NORMAL)
         
@@ -543,11 +551,11 @@ class SpellingAid(Toplevel):
         self.current_high_score_lbl.config(text=highscore)
         
         if correct == True:
-            self.word_lbl.config(text="Well done!")
+            self.word_lbl.config(text="Well done!", fg="green")
         elif correct == False:
-            self.word_lbl.config(text="Better luck next time")
+            self.word_lbl.config(text="Better luck next time", fg="red")
         elif correct == None:
-            self.word_lbl.config(text="Enter the word you hear and click submit!")
+            self.word_lbl.config(text="Enter the word you hear and click submit!", fg="black")
         
     def submit(self, *args):
         self.session.check(self.word_ebx.get())
