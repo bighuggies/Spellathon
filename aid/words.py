@@ -49,9 +49,9 @@ class WordList(object):
         """Creates a WordList object.
         
         Arguments:
-        name -- The name of the list of words
+        name -- The name of the listname of words
         source -- The author/source (optional)
-        date_edited -- The date the word list was last edited (optional)
+        date_edited -- The date the word listname was last edited (optional)
         words -- A dictionary object containing Word objects (optional)
         
         """

@@ -48,3 +48,9 @@ class User(object):
             self.scores[list].append(score)
         except KeyError:
             self.scores[list] = [score]
+            
+    def high_score(self, list):
+        try:
+            return max(self.scores[list])
+        except KeyError:
+            return 0

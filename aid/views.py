@@ -214,6 +214,8 @@ class Logon(Toplevel):
 
         self.elements = [self.logo_lbl, self.loginframe, self.administrate_btn]
         
+        self.username_ebx.focus_set()
+        
     def arrange(self):
         # Arrange the picture, the login fields, and the administration panel
         for i, element in enumerate(self.elements):
@@ -226,8 +228,8 @@ class Logon(Toplevel):
     def new_user(self):
         nu = NewUser(self, btncolumn=0)
         
-    def welcome_screen(self):
-        ws = WelcomeScreen(self.master)
+    def welcome_screen(self, user):
+        ws = WelcomeScreen(user, master=self.master)
         
     def validate(self, *args):
         username = self.username_ebx.get()
@@ -238,7 +240,7 @@ class Logon(Toplevel):
         
         if user:
             if user.password == password:
-                self.welcome_screen()
+                self.welcome_screen(user)
                 self.destroy()
             else:
                 tkMessageBox.showerror("Error", "Incorrect password")
@@ -361,17 +363,23 @@ class CreateAdmin(Dialog):
         self.frame.grid(sticky="we", **pad5)
         
 class WelcomeScreen(Toplevel):
-    def __init__(self, master=None):
+    def __init__(self, user, master=None):
         Toplevel.__init__(self, master)
         self.resizable(False, False)
+        self.user = user
         self.build()
         self.arrange()
         
     def build(self):
+        self.spelling_img = PhotoImage(file="images/spbee.gif")
+        self.score_img = PhotoImage(file="images/score.gif")
+        
         self.welcome_frame = LabelFrame(self, text="Welcome", **pad5)
-        self.welcome_lbl = Label(self.welcome_frame, text="Welcome! Choose your action:")
-        self.spelling_btn = Button(self.welcome_frame, text="Begin Spelling", width=20, height=5, command=self.spelling_aid)
-        self.score_btn = Button(self.welcome_frame, text="View Scores", width=20, height=5, command=self.score)
+        self.welcome_lbl = Label(self.welcome_frame, text="Welcome " + self.user.realname + "!", font=("Helvetica", "16"))
+        self.spelling_btn = Button(self.welcome_frame, text="Begin Spelling", 
+                                   command=self.spelling_aid, image=self.spelling_img, compound=BOTTOM, font=("Helvetica", "16"))
+        self.score_btn = Button(self.welcome_frame, text="View Scores", 
+                                command=self.score_frame, image=self.score_img, compound=BOTTOM, font=("Helvetica", "16"))
         
     def arrange(self):
         self.welcome_frame.grid(**pad5)
@@ -380,111 +388,212 @@ class WelcomeScreen(Toplevel):
         self.score_btn.grid(**pad2)
         
     def spelling_aid(self):
-        sa = SpellingAid(self.master)
+        sa = SpellingAid(self.user, master=self.master)
         self.destroy()
         
-    def score(self):
+    def score_frame(self):
         sc = Score(self)
         
 class SpellingAid(Toplevel):
-    def __init__(self, master=None):
+    def __init__(self, user, master=None):
         Toplevel.__init__(self, master)
         self.resizable(False, False)
+        self.bind("<Return>", self.submit)
+        
         self.build()
         self.arrange()
         
-    def build(self):
-        self.word_metadata = LabelFrame(self, text="Word")
+        self.user = user
+        self.session = None
         
+    def build(self):
+        
+        self.lists_frame = LabelFrame(self, text="Get started", **pad5)
+        self.lists_lbl = Label(self.lists_frame, text="Choose a list to begin spelling!", font=("Helvetica", "12"))
         self.lists_var = StringVar()
-        self.lists_opt = OptionMenu(self, self.lists_var, "")
+        self.lists_opt = OptionMenu(self.lists_frame, self.lists_var, "")
         self.lists_opt.config(anchor="w")
         self.lists_model = TLDROptionMenuModel(self.lists_opt, self.lists_var)
-        self.start_spelling_btn = Button(self, text="Start spelling", command=self.start_session)
         
-        self.definition_lbl= Label(self.word_metadata, text="Definition:")
-        self.example_lbl = Label(self.word_metadata, text="Example:")
-        self.word_definition_lbl = Label(self.word_metadata, text="No definition", wraplength=400, justify=LEFT)
-        self.word_example_lbl = Label(self.word_metadata, text="No example", wraplength=400, justify=LEFT)
-        self.speak_again_btn = Button(self.word_metadata, text="Speak again")
         
-        self.word_ebx= Entry(self, font=("Helvetica", 16), width=30)
-        self.word_submit_btn = Button(self, text="Submit", command=self.submit)
+        self.start_spelling_img = PhotoImage(file="images/go.gif")
+        self.stop_spelling_img = PhotoImage(file="images/stop.gif")
+        self.start_spelling_btn = Button(self.lists_frame, text="Start", command=self.start_session, 
+                                         image=self.start_spelling_img, compound=CENTER, font=("Helvetica", "14"), relief=FLAT)
         
-        self.score = LabelFrame(self, text="Score", **pad5)
-        self.score_lbl = Label(self.score, text="Score:")
-        self.current_score_lbl= Label(self.score, text="0/0")
-        self.high_score_lbl = Label(self.score, text="High score:")
-        self.current_high_score_lbl = Label(self.score, text="n/a")
+        self.word_lbl = Label(self, text="Enter the word you hear and click submit!", font=("Helvetica", "12"))
+        self.word_ebx= Entry(self, font=("Helvetica", "24"), width=30, state=DISABLED)
+        self.word_submit_img = PhotoImage(file="images/submit.gif")
+        self.word_submit_btn = Button(self, image=self.word_submit_img, command=self.submit, state=DISABLED, relief=FLAT)
+
+        self.example_img = PhotoImage(file="images/example.gif")
+        self.speak_img = PhotoImage(file="images/speak.gif")
+        
+        self.word_metadata = Frame(self)
+        
+        self.buttons = Frame(self, padx=5, pady=20)
+        
+        self.definition_lbl= Label(self.word_metadata, text="Definition:", font=("Helvetica", "12"))
+        self.word_definition_lbl = Text(self.word_metadata, height=10, state=DISABLED, font=("Helvetica", "10"))
+        self.speak_again_btn = Button(self.buttons, text="Speak again", state=DISABLED, image=self.speak_img, compound=BOTTOM, relief=FLAT)
+        self.example_btn = Button(self.buttons, text="Example", state=DISABLED, image=self.example_img, compound=BOTTOM, relief=FLAT)
+        
+        
+        self.score_frame = LabelFrame(self, text="Score", **pad5)
+        self.score_lbl = Label(self.score_frame, text="Score:", font=("Helvetica", "12"))
+        self.current_score_lbl= Label(self.score_frame, text="0/0", font=("Helvetica", "16"))
+        self.high_score_lbl = Label(self.score_frame, text="High score:", font=("Helvetica", "12"))
+        self.current_high_score_lbl = Label(self.score_frame, text="n/a", font=("Helvetica", "16"))
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
         self.exit_btn= Button(self, text="Exit", command=self.welcome_screen)
         
-    def welcome_screen(self):
-        ws = WelcomeScreen(self.master)
-        self.destroy()
-        
+        self.start_spelling_btn.focus_set()
+                
     def arrange(self):
-        self.lists_opt.grid(column=0, row=0, sticky="we", padx=5, pady=2)
-        self.start_spelling_btn.grid(column=1, row=0, padx=5, pady=2)
+        self.lists_frame.grid(column=0, row=0, **pad5)
         
-        self.word_metadata.grid(column=0, row=1, sticky="we", columnspan=2, **pad5)
-
-        self.word_ebx.grid(column=0, row=2, padx=5, pady=2)
-        self.word_submit_btn.grid(column=1, row=2, sticky="we", padx=5, pady=2)
+        self.lists_lbl.grid(column=0, row=0, sticky="nswe", padx=5, pady=2)
+        self.lists_opt.grid(column=0, row=1, sticky="nswe", padx=5, pady=2)
+        self.start_spelling_btn.grid(column=1, row=0, rowspan=2, padx=5, pady=2)
         
-        self.score.grid(column=0, row=3, sticky="we", columnspan=2, **pad5)
+        self.word_lbl.grid(column=0, row=2, columnspan=2, sticky="nswe", padx=20, pady=2)
+        self.word_ebx.grid(column=0, row=3, padx=20, pady=2)
+        self.word_submit_btn.grid(column=0, row=4, sticky="we", padx=20, pady=2)
+        self.buttons.grid(column=0, row=5, columnspan=2)
+        self.word_metadata.grid(column=0, row=6, sticky="we", columnspan=2, **pad5)
         
-        self.exit_btn.grid(column=1, row=4, sticky="we", padx=5, pady=2)
+        self.score_frame.grid(column=0, row=7, sticky="we", columnspan=2, **pad5)
+        
+        self.exit_btn.grid(column=0, row=8, sticky="we", padx=5, pady=2)
         
         for i, widget in enumerate(self.score_elements):
             widget.grid(column=i, row=0, sticky="w", **pad2)
                     
         self.definition_lbl.grid(column=0, row=0, sticky="nw", **pad2)
-        self.example_lbl.grid(column=0, row=1, sticky="nw", **pad2)
-        self.word_definition_lbl.grid(column=1, row=0, sticky="w", **pad2)
-        self.word_example_lbl.grid(column=1, row=1, sticky="w", **pad2)
-        self.speak_again_btn.grid(column=0, row=2, sticky="w", columnspan=2, **pad2)
+        self.word_definition_lbl.grid(column=0, row=1, sticky="w", **pad2)
+        
+        self.speak_again_btn.grid(column=0, row=0, sticky="nswe", **pad2)
+        self.example_btn.grid(column=1, row=0, sticky="nswe", **pad2)
+        
+    def welcome_screen(self):
+        if self.session:
+            self.end_session()
+        
+        ws = WelcomeScreen(self.user, master=self.master)
+        self.destroy()
         
     def start_session(self):
-        self.start_spelling_btn.config(text="Stop spelling", command=self.end_session)
-        self.session = Session(self, self.lists_model.get_list())
+        self.start_spelling_btn.config(text="Stop", command=self.end_session, image=self.stop_spelling_img)
+        
+        self.session = Session(self, self.lists_model.get_list(), self.user)
+        
+        self.speak_again_btn.config(command=self.session.speak_word)
+        self.example_btn.config(command=self.session.speak_example)
+        
+        self.lists_opt.config(state=DISABLED)
+        
+        self.speak_again_btn.config(state=NORMAL)
+        self.example_btn.config(state=NORMAL)
+        self.word_ebx.config(state=NORMAL)
+        self.word_submit_btn.config(state=NORMAL)
+        
+        self.word_ebx.focus_set()
         self.session.start()
         
     def end_session(self):
-        self.start_spelling_btn.config(text="Start spelling", command=self.start_session)
         self.session.end()
         
-    def update(self, definition, example):
-        self.word_definition_lbl.config(text=definition)
-        self.word_example_lbl.config(text=example)
+    def session_ended(self, score, highscore, newhighscore, attempts):
+        self.start_spelling_btn.config(text="Start", command=self.start_session, image=self.start_spelling_img)
+        self.current_score_lbl.config(text="0/0")
+        self.high_score_lbl.config(text="High score:")
+        self.current_high_score_lbl.config(text="n/a")
         
-    def submit(self):
-        if self.session.check(self.word_ebx.get()):
-            self.word_ebx.delete(0, END)
+        self.lists_opt.config(state=NORMAL)
+        
+        self.speak_again_btn.config(state=DISABLED)
+        self.example_btn.config(state=DISABLED)
+        self.word_ebx.config(state=DISABLED)
+        self.word_submit_btn.config(state=DISABLED)
+        
+        sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts)
+        
+        self.session = None
+        
+    def update(self, definition, score, highscore):
+        self.word_definition_lbl.config(state=NORMAL)
+        self.word_definition_lbl.delete(1.0, END)
+        self.word_definition_lbl.insert(END, definition)
+        self.word_definition_lbl.config(state=DISABLED)
+        
+        self.current_score_lbl.config(text=score)
+        self.current_high_score_lbl.config(text=highscore)
+        
+    def submit(self, *args):
+        self.session.check(self.word_ebx.get())
+        self.word_ebx.delete(0, END)
         
 class SpellingComplete(Dialog):
-    def build(self):
-        self.list_complete_lbl = Label(self, text="You have completed list x")
+    def __init__(self, master, listname, score, highscore, newhighscore, attempts):
+        self.list = listname
+        self.score = score
+        self.highscore = highscore
+        self.newhighscore = newhighscore
+        self.attempts = attempts
         
+        Dialog.__init__(self, master, "Well done", 0)  
+                    
+    def build(self):
+        self.list_complete_lbl = Label(self, text="You have completed " + self.list)
 
-        self.score = LabelFrame(self, text="Score", **pad5)
-        self.score_lbl = Label(self.score, text="Score:")
-        self.current_score_lbl= Label(self.score, text="0/0")
-        self.high_score_lbl = Label(self.score, text="High score:")
-        self.current_high_score_lbl = Label(self.score, text="n/a")
+        self.score_frame = LabelFrame(self, text="Score", **pad5)
+        self.score_lbl = Label(self.score_frame, text="Score:", font=("Helvetica", "12"))
+        self.current_score_lbl= Label(self.score_frame, text=str(self.score), font=("Helvetica", "16"))
+        self.high_score_lbl = Label(self.score_frame, text="High score:", font=("Helvetica", "12"))
+        self.current_high_score_lbl = Label(self.score_frame, text=str(self.highscore), font=("Helvetica", "16"))
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
-        self.highscore_lbl = Label(self, text="New highscore!")
+        self.attempts_frame = LabelFrame(self, text="Your attempts", **pad5)
+        
+        self.attempt_keys = []
+        self.attempt_values = []
+        
+        for key, value in self.attempts.iteritems():
+            if key == value:
+                self.attempt_keys.append(Label(self.attempts_frame, text=key + ":", font=("Helvetica", "12")))
+                self.attempt_values.append(Label(self.attempts_frame, text=value, font=("Helvetica", "12")))
+            else:
+                self.attempt_keys.append(Label(self.attempts_frame, text=key + ":", fg="red", font=("Helvetica", "12")))
+                self.attempt_values.append(Label(self.attempts_frame, text=value, fg="red", font=("Helvetica", "12")))
+
+        if self.newhighscore:
+            self.congratulations_lbl = Label(self, text="New high score!", fg="orange", font=("Helvetica", "16"))
+        else:
+            self.congratulations_lbl = Label(self, text="Well done!", fg="brown", font=("Helvetica", "14"))
         
     def arrange(self):
         self.list_complete_lbl.grid(column=0, row=0, **pad2)
         
-        self.score.grid(column=0, row=1, sticky="we", **pad5)
+        self.score_frame.grid(column=0, row=1, sticky="we", **pad5)
         
-        self.highscore_lbl.grid(column=0, row=2, **pad2)
+        self.congratulations_lbl.grid(column=0, row=2, **pad2)
+        
+        self.attempts_frame.grid(column=0, row=3, sticky="we", **pad5)
+        
+        j = 1
+        for i, l in enumerate(self.attempt_keys):
+            l.grid(column=j, row=i%10, sticky="w", **pad5)
+            if i%10 == 9:
+                j += 2
+            
+        j = 2
+        for i, l in enumerate(self.attempt_values):
+            l.grid(column=j, row=i%10, sticky="w", **pad5)
+            if i%10 == 9:
+                j+= 2
 
         for i, widget in enumerate(self.score_elements):
             widget.grid(column=0, row=i, sticky="w", **pad2)
@@ -499,7 +608,7 @@ class Score(Dialog):
         self.num_words_lbl = Label(self.list_metadata, text="Number of words:")
         self.difficulty_lbl = Label(self.list_metadata, text="Difficulty:")
         self.num_attempts_lbl = Label(self.list_metadata, text="Number of attempts:")
-        self.high_score_lbl = Label(self.list_metadata, text="High score:")
+        self.high_score_lbl = Label(self.list_metadata, text="High score_frame:")
         self.list_metadata_labels = [self.num_words_lbl, self.difficulty_lbl, 
                                      self.num_attempts_lbl, self.high_score_lbl]
         
@@ -516,10 +625,10 @@ class Score(Dialog):
         self.lists_lbx.grid(**pad2)
         
         self.list_metadata.grid(column=1, row=0, sticky="nswe", **pad5)
-        
+                
         for i, label in enumerate(self.list_metadata_labels):
             label.grid(column=0, row=i, sticky="w", **pad2)
-            
-        for i, label in enumerate(self.list_metadata_fields):
-            label.grid(column=1, row=i, sticky="w",  **pad2)
         
+        j = 0
+        for i, label in enumerate(self.list_metadata_fields):
+            label.grid(column=1, row=i, sticky="w",  **pad2)        

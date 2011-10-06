@@ -5,35 +5,72 @@ Created on 5/10/2011
 '''
 import time
 import random
+from database import UserManager
+from speech import Speech
+#from user import User
 
 class Session(object):
-    def __init__(self, interface, list):
+    def __init__(self, interface, listname, user):
         self.interface = interface
-        self.begintime = time.time()
-        self.wordlist = list
+        self.wordlist = listname
+        self.speech = Speech()
+        self.user = user
+        self.score = 0
+        self.highscore = self.user.high_score(listname.name)
+        self.attempts = {}
+        self.newhighscore = False
                 
     def start(self):
         self.words = self.wordlist.words.keys()
+        self.list_length = len(self.words)
         random.shuffle(self.words)
 
         self.word = self.words.pop()
-        print self.word
-
-        self.interface.update(self.wordlist.words[self.word].definition, self.wordlist.words[self.word].example)
+        self.speech.speak(self.word)
+        
+        self.update_interface()
         
     def end(self):
-        self.endtime = time.time()
-        print (self.endtime - self.begintime)
+        self.user.add_score(self.wordlist.name, self.score)
+        
+        um = UserManager()
+        um.update_user(self.user)
+        um.commit()
+                
+        self.interface.session_ended(str(self.score) + "/" + str(self.list_length), str(self.highscore) + "/" + str(self.list_length), self.newhighscore, self.attempts)
         
     def next(self):
-        self.word = self.words.pop()
-        print self.word
-        self.interface.update(self.wordlist.words[self.word].definition, self.wordlist.words[self.word].example)
         
+        try:
+            self.word = self.words.pop()
+            self.speech.speak(self.word)
+            self.update_interface()
+        except IndexError:
+            self.end()
+            
+    def speak_example(self):
+        self.speech.speak(self.wordlist.words[self.word].example)
+    
+    def speak_word(self):
+        self.speech.speak(self.word)
+    
+    def update_interface(self):
+        self.interface.update(self.wordlist.words[self.word].definition, 
+              str(self.score) + "/" + str(len(self.wordlist.words)),
+              str(self.highscore) + "/" + str(len(self.wordlist.words)))
+
     def check(self, word):
+        self.attempts[self.word] = word
+        
         if self.word == word:
+            self.score += 1
+            
+            if self.score > self.highscore:
+                self.highscore = self.score
+                self.newhighscore = True
+            
             self.next()
             return True
         else:
+            self.next()
             return False
-            

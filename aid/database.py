@@ -55,6 +55,9 @@ class UserManager(DBManager):
             return True
         except sqlite.IntegrityError:
             return False
+        
+    def update_user(self, user):
+        self.c.execute("UPDATE users SET user=? WHERE username=?", (user, user.username))
             
     def retrieve_user(self, user):        
         try:
