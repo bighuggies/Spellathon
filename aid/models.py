@@ -59,7 +59,7 @@ class WordDestinationModel(object):
         self.interface.update_metadata(word)
         
     def add_word(self, word):
-        self.wordlist.words[word.word] = word
+        self.wordlist.add_word(word)
         self.listbox.items = self.wordlist.words
         self.listbox.update()
         
@@ -70,7 +70,7 @@ class WordDestinationModel(object):
         self.listbox.update()
             
     def remove_word(self, word):
-        del self.wordlist.words[word.word]
+        self.wordlist.del_word(word)
         self.listbox.delete(word)
         self.interface.reset_metadata()
         
