@@ -21,12 +21,36 @@ class WordDestinationModel(object):
         self.listbox.add_listener(self)
         
         self.wordlist = tldr.parse_tldr('wordlists/' + listname + '.tldr', listname)
-                
-        self.listbox.items = self.wordlist.words
-        self.listbox.update
         
+        self.listbox.items = self.wordlist.words
+        self.listbox.update()
+                
     def listbox_select(self, string, word):
         self.interface.update_metadata(word)
+        
+    def add_word(self, word):
+        self.wordlist.words[word.word] = word
+        self.listbox.items = self.wordlist.words
+        self.listbox.update()
+        
+    def add_words(self, words):
+        self.wordlist.words = dict(words.items() + self.wordlist.words.items())
+            
+        self.listbox.items = self.wordlist.words
+        self.listbox.update()
+            
+    def remove_word(self, word):
+        del self.wordlist.words[word.word]
+        self.listbox.delete(word)
+        self.interface.reset_metadata()
+        
+    def remove_all_words(self):
+        self.listbox.items = self.wordlist.words = {}
+        self.listbox.update()
+        self.interface.reset_metadata()
+        
+    def save(self):
+        tldr.generate_tldr(self.wordlist, 'wordlists/' + self.wordlist.name + '.tldr')
         
 class WordSourceModel(object):
     def __init__(self, interface, optionmenu, optionmenuvar, listbox, filter, filtervar):
@@ -37,6 +61,7 @@ class WordSourceModel(object):
         self.filter = filter
         self.filtervar = filtervar
         self.items = {}
+        self.word = None
         
         self.optionmenuvar.trace('w', self.source_chosen)
         self.filtervar.trace('w', self.filter_listbox)
@@ -63,12 +88,14 @@ class WordSourceModel(object):
         self.listbox.update()
         
     def listbox_select(self, string, word):
+        self.word = word
         self.interface.update_metadata(word)
-
-
-class ListEditModel(object):
-    def __init__(self):
-        a=0
+        
+    def get_word(self):
+        return self.word
+    
+    def get_words(self):
+        return self.items
 
 class TLDROptionMenuModel(object):
     def __init__(self, optionmenu, optionmenuvar):
@@ -113,7 +140,7 @@ class TLDRMultiScrollListbox(object):
         
         try:
             # Move the list to the spellingaid directory
-            shutil.copy(listfile, "wordlists/")
+            shutil.copy(listfile, 'wordlists/')
             # Add the list
             self.update_items()
         except Exception:

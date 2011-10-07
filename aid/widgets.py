@@ -221,6 +221,8 @@ class ScrollListbox(Frame):
                 if value == item:
                     del self.items[key]
                     
+        self.update()
+                    
     def update(self):
         self.listbox.delete(first=0, last=END)
         self.listbox.insert(END, *sorted(self.items.keys()))

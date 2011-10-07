@@ -14,6 +14,8 @@ import database
 from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
 from models import *
 from aid.speech import Speech
+import random
+from words import Word
 
 '''
 Option constants for widgets
@@ -26,18 +28,27 @@ helv16 = {'font' : ('Helvetica', 16)}
 difficulties = ['CL1', 'CL2', 'CL3', 'CL4', 'CL5', 'CL6', 'CL7', 'CL8', 'AL1', 'AL2']
 
 class NewWord(Dialog):
+    def __init__(self, model, master=None):
+        self.model = model
+        
+        Dialog.__init__(self, master, title='New word', btncolumn=0)
+    
     def build(self):
         self.word_information_frame = LabelFrame(self, text='Word details', **pad5)
         self.word_lbl = Label(self.word_information_frame, text='Word:')
         self.definition_lbl = Label(self.word_information_frame, text='Definition:')
         self.example_lbl = Label(self.word_information_frame, text='Example:')
+        self.difficulty_lbl = Label(self.word_information_frame, text='Difficulty:')
+        self.difficulty_var = StringVar()
+        self.difficulty_opt = OptionMenu(self.word_information_frame, self.difficulty_var, *difficulties)
+        self.difficulty_var.set('CL1')
         
         self.word_ebx = Entry(self.word_information_frame)
         self.definition_ebx = Text(self.word_information_frame, width=30, height=4)
         self.example_ebx = Text(self.word_information_frame, width=30, height=4)
         
-        self.labels = [self.word_lbl, self.definition_lbl, self.example_lbl]
-        self.fields = [self.word_ebx, self.definition_ebx, self.example_ebx]
+        self.labels = [self.word_lbl, self.definition_lbl, self.example_lbl, self.difficulty_lbl]
+        self.fields = [self.word_ebx, self.definition_ebx, self.example_ebx, self.difficulty_opt]
         
     def arrange(self):
         self.word_information_frame.grid(column=0, row=0, sticky='nswe', **pad5)
@@ -48,8 +59,27 @@ class NewWord(Dialog):
         for i, field in enumerate(self.fields):
             field.grid(column=1, row=i, sticky='we', **pad2)
             
+    def validate(self):
+        if self.word_ebx.get() == "":
+            tkMessageBox.showerror('Error', 'Please enter a word.')
+            return False
+            
+        if self.definition_ebx.get(1.0, END) == "":
+            tkMessageBox.showerror('Error', 'Please enter a definition.')
+            return False
+
+        if self.example_ebx.get(1.0, END) == "":
+            tkMessageBox.showerror('Error', 'Please enter an example.')
+            return False
+
+        return True
+    
+    def apply(self):
+        word = Word(self.word_ebx.get(), self.definition_ebx.get(1.0, END).strip(), self.example_ebx.get(1.0, END).strip(), self.difficulty_var.get())
+        self.model.add_word(word)
+            
 class NewList(Dialog):
-    def __init__(self, model, master=None, title="New list", btncolumn=0):
+    def __init__(self, model, master=None, title='New list', btncolumn=0):
         self.model = model
         
         Dialog.__init__(self, master, title, btncolumn)
@@ -78,11 +108,11 @@ class NewList(Dialog):
         name = self.name_ebx.get()
         author = self.author_ebx.get()
         
-        if name == "":
-            tkMessageBox.showerror("Error", "Please enter a list name.")
+        if name == '':
+            tkMessageBox.showerror('Error', 'Please enter a list name.')
             return False
         
-        if author == "":
+        if author == '':
             tkMessageBox.showerror('Error', 'Please enter a list author')
             return False
         
@@ -121,14 +151,16 @@ class ListEdit(Dialog):
 
         
         self.control_column = Frame(self)
-        self.add_btn = Button(self.control_column, text='Add word >')
-        self.add_all_btn = Button(self.control_column, text='Add all words >>')
-        self.add_x_btn = Button(self.control_column, text='Add x words >')
-        self.remove_btn = Button(self.control_column, text='Remove word')
-        self.remove_all_btn = Button(self.control_column, text='Remove all words')
-        self.new_word_btn = Button(self.control_column, text='Add new word')
+        self.add_btn = Button(self.control_column, text='Add word >', command=self.add_word)
+        self.add_all_btn = Button(self.control_column, text='Add all words >>', command=self.add_all_words)
+        self.add_x_btn = Button(self.control_column, text='Add x words >', command=self.add_x_words)
+        self.x_ebx = Entry(self.control_column, width=10)
+        self.x_ebx.insert(END, 'x')
+        self.remove_btn = Button(self.control_column, text='Remove word', command=self.remove_word)
+        self.remove_all_btn = Button(self.control_column, text='Remove all words', command=self.remove_all_words)
+        self.new_word_btn = Button(self.control_column, text='Add new word', command=self.new_word)
         
-        self.control_column_elements = [self.add_btn, self.add_all_btn, self.add_x_btn,
+        self.control_column_elements = [self.add_btn, self.add_all_btn, self.add_x_btn, self.x_ebx,
                                         self.remove_btn, self.remove_all_btn, self.new_word_btn]
         
         self.destination_lbl = Label(self.destination_frame, text='List contents:')
@@ -149,7 +181,7 @@ class ListEdit(Dialog):
     def arrange(self):
         self.source_frame.grid(column=0, row=0, sticky='nswe', **pad5)
         
-        self.source_opt.grid(column=0, row=0, sticky="we", **pad2)
+        self.source_opt.grid(column=0, row=0, sticky='we', **pad2)
         self.source_words_lbx.grid(column=0, row=1, sticky='nswe', **pad2)
         self.source_filter_ebx.grid(column=0, row=2, sticky='nswe', **pad2)
         
@@ -171,7 +203,42 @@ class ListEdit(Dialog):
         self.word_definition_lbl.grid(column=1, row=0, sticky='nw', **pad2)
         self.word_example_lbl.grid(column=1, row=1, sticky='nw', **pad2)
         self.speak_btn.grid(column=0, row=2, sticky='nw', columnspan=2, **pad2)
+        
+    def add_word(self):
+        if self.word:
+            self.destination_model.add_word(self.source_model.get_word())
+        else:
+            tkMessageBox.showerror('Error', 'No word selected')
+
+    def add_all_words(self):
+        self.destination_model.add_words(self.source_model.get_words())
     
+    def add_x_words(self):
+        try:
+            x = int(self.x_ebx.get())
+            words = self.source_model.get_words()
+            
+            keys = words.keys()
+            random.shuffle(keys)
+            
+            try:
+                for i in range(0, x):
+                    self.destination_model.add_word(words[keys.pop()])
+            except IndexError:
+                pass
+                        
+        except ValueError:
+            tkMessageBox.showerror('Error', 'Please enter a number')
+            
+    def remove_word(self):
+        if self.word:
+            self.destination_model.remove_word(self.word)
+        else:
+            tkMessageBox.showerror('Error', 'No word selected')
+            
+    def remove_all_words(self):
+        self.destination_model.remove_all_words()
+                    
     def speak(self):
         if self.word:
             speech = Speech()
@@ -183,6 +250,21 @@ class ListEdit(Dialog):
         self.word = word
         self.word_definition_lbl.config(text=word.definition)
         self.word_example_lbl.config(text=word.example)
+        
+    def reset_metadata(self):
+        self.word = None
+        self.word_definition_lbl.config(text='No definition')
+        self.word_example_lbl.config(text='No example')
+        
+    def new_word(self):
+        nw = NewWord(self.destination_model, master=self)
+        
+    def validate(self):
+        return tkMessageBox.askokcancel('Save new list', 'Save changes to ' + self.listname + '?')
+    
+    def apply(self):
+        self.destination_model.save()
+        self.master.list_model.update_items()
 
 class ListManagement(Frame):
     def __init__(self, master=None):
@@ -215,7 +297,7 @@ class ListManagement(Frame):
             control.grid(column=1, row=i, sticky='we', padx=5, pady=2)
             
     def new_list(self):
-        nl = NewList(self.list_model, master=self, title="New list", btncolumn=0)
+        nl = NewList(self.list_model, master=self, title='New list', btncolumn=0)
             
     def delete_list(self):
         if tkMessageBox.askokcancel('Delete list', 'Are you sure you want to delete the currently selected list?'):
@@ -407,7 +489,7 @@ class FirstRun(Dialog):
                                      ' of the username and password, because it will not' +
                                      ' be recoverable.', wraplength=300, justify=LEFT)
         
-        self.new_user_btn = Button(self.firstrun_frame, text="New administrative user", command=self.master.new_user)
+        self.new_user_btn = Button(self.firstrun_frame, text='New administrative user', command=self.master.new_user)
         
         self.um = database.get_user_manager()
         self.um.add_listener(self)
