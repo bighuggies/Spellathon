@@ -45,44 +45,64 @@ class Logon(Frame):
     '''Initial screen of the application where users log on.
 
     Public functions:
-    
+    user_added -- Called by the database when an administrator is added.
 
     '''
     def __init__(self, master=None):
         Frame.__init__(self, master)
+        
+        # Set the title of the root window.
         self.master.title('Spellathon Logon')
+        
+        # Bind enter to log on.
         self.master.bind('<Return>', self._validate)
         
+        # Create the logon screen.
         self._build()
         self._arrange()
         
-        self.um = database.get_user_manager()                
+        # Get access to the user database to let the class validate log on
+        # attempts.
+        self.um = database.get_user_manager()
+        
+        # Set the initial focos to the username field.              
         self.username_ebx.focus_set()
         
     def _build(self):
+        '''Create logon widgets.'''
+        # Spellathon logo, header.
         self.heading_lbl = Label(self, text='SPELLATHON', **helv16)
         self.logo = PhotoImage(file='images/main.gif')
         self.logo_lbl = Label(self, image=self.logo)
         
+        # All of the usual login fields.
         self.loginframe = LabelFrame(self, text='Login', **pad5)
         self.username_lbl = Label(self.loginframe, text='Username:', width=35)
         self.password_lbl = Label(self.loginframe, text='Password:')
         self.username_ebx = Entry(self.loginframe)
         self.password_ebx = Entry(self.loginframe, show='*')
         
-        self.login_btn = Button(self.loginframe, text='Login', command=self._validate)
-        self.new_user_btn = Button(self.loginframe, text='New user', command=self._new_user)
-        self.administrate_btn = Button(self.loginframe, text='Administrate', command=self._validate_admin)
-
+        # Buttons to log in, create new users, and administrate.
+        self.login_btn = Button(self.loginframe, text='Login',
+                                command=self._validate)
         
-        self.login_elements = [self.username_lbl, self.username_ebx, self.password_lbl,
-                      self.password_ebx, self.login_btn, self.new_user_btn, self.administrate_btn]
+        self.new_user_btn = Button(self.loginframe, text='New user',
+                                   command=self._new_user)
+        
+        self.administrate_btn = Button(self.loginframe, text='Administrate',
+                                       command=self._validate_admin)
 
+        # List of login elements for easier arrangement.
+        self.login_elements = [self.username_lbl, self.username_ebx,
+                               self.password_lbl, self.password_ebx,
+                               self.login_btn, self.new_user_btn, 
+                               self.administrate_btn]
 
+        # List of elements for easier arrangement.
         self.elements = [self.logo_lbl, self.heading_lbl, self.loginframe]
         
     def _arrange(self):
-        
+        '''Place the widgets on the form.'''
         # Arrange the picture, the login fields, and the administration panel
         for i, element in enumerate(self.elements):
             element.grid(column=0, row=i, sticky='we', **pad5)
@@ -90,8 +110,86 @@ class Logon(Frame):
         # Arrange the login labels and fields
         for i, widget in enumerate(self.login_elements):
             widget.grid(column=0, row=i, sticky='we', **pad2)
+                                        
+    def _new_user(self):
+        '''Create a new user dialog.'''
+        nu = NewUser(self, btncolumn=0, title='New user')
+        
+    def _welcome(self, user):
+        '''Create the welcome frame and destroy this one.'''
+        ws = WelcomeScreen(user, master=self.master)
+        self.destroy()
+        ws.pack()
+                
+    def _administrate(self):
+        '''Create the administration frame and destroy this one.'''
+        admin = Administration(self.master)
+        self.destroy()
+        admin.pack()
+
+    def _validate(self, *args):
+        '''Check the login details.'''
+        # Fetch the information from the fields.
+        username = self.username_ebx.get()
+        password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
+        
+        # Get the user object from the database.
+        user = self.um.retrieve_user(username)
+        
+        # Check if the details are correct. Show error dialogs if they are not.
+        if user:
+            if user.password == password:
+                self._welcome(user)
+            else:
+                tkMessageBox.showerror('Error', 'Incorrect password')
+        else:
+            tkMessageBox.showerror('Error', 'No such user')
             
+    def _validate_admin(self):
+        '''Validate administrator details.'''
+        # Get the name of the admin account from the configuration file.
+        admin = self._load_config()
+        
+        # Check if an admin has been specified.
+        if admin:
+            username = self.username_ebx.get()
+            
+            # If the provided username matches the administrator username, check
+            # the password and show the administration view.
+            if username == admin:
+                password = hashlib.sha224(username + 
+                                          self.password_ebx.get()).hexdigest()
+                user = self.um.retrieve_user(username)
+                
+                if user:
+                    if user.password == password:
+                        self._administrate()
+                    else:
+                        tkMessageBox.showerror('Error', 'Incorrect password')
+                else:
+                    tkMessageBox.showerror('Error', 'No such user')        
+            else:
+                tkMessageBox.showerror('Error', 'You are not an administrator')
+                
+        # If no admin has been specified, prompt the user to make an
+        # administrator account.
+        else:
+            tkMessageBox.showerror('Error', 'It appears that this is the' +
+                                   ' first time you have launched Spellathon.' +
+                                   ' In order to manage users and word lists,' +
+                                   ' you will need to create an administrator' +
+                                   ' account. Make sure you take note' +
+                                   ' of the username and password, because' +
+                                   ' it will not be recoverable.')
+            self._new_admin()
+    
     def _load_config(self):
+        '''Load the configuration file.
+        
+        Returns:
+        The name of the administrator account.
+        
+        '''
         try:
             cfg = open('.config', 'r')
             admin = cfg.readline().split('=')
@@ -102,121 +200,87 @@ class Logon(Frame):
                 return None
         except IOError:
             return None
-                                        
-    def _new_user(self):
-        nu = NewUser(self, btncolumn=0, title='New user')
-        
-    def _welcome(self, user):
-        ws = WelcomeScreen(user, master=self.master)
-        self.destroy()
-        ws.pack()
-        
-    def _validate_admin(self):
-        admin = self._load_config()
-        
-        if admin:
-            username = self.username_ebx.get()
-            
-            if username == admin:
-                
-                password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
-                
-                user = self.um.retrieve_user(username)
-                
-                if user:
-                    if user.password == password:
-                        self._administrate()
-                    else:
-                        tkMessageBox.showerror('Error', 'Incorrect password')
-                else:
-                    tkMessageBox.showerror('Error', 'No such user')
-                    
-            else:
-                tkMessageBox.showerror('Error', 'You are not an administrator')
-        else:
-            tkMessageBox.showerror('Error', 'It appears that this is the ' +
-                                     'first time you have launched Spellathon.' +
-                                     ' In order to manage users and word lists,' +
-                                     ' you will need to create an administrator' +
-                                     ' account. Make sure you take note' +
-                                     ' of the username and password, because it will not' +
-                                     ' be recoverable.')
-            self._new_admin()
             
     def _new_admin(self):
+        '''Prompt the user to create a new admin and listen for completion.'''
+        # Begin listening for account creation.
         self.um.add_listener(self)
+        # Prompt the user to create the admin account.
         nu = NewUser(self, btncolumn=0, title='New administrator')
+        # Stop listening for account creation, so that future accounts which may
+        # be created do not get set as admin accounts.
         self.um.remove_listener(self)
-        
+
     def user_added(self, user):
+        '''Save the administrator account name to a configuration file.'''
         cfg = open('.config', 'w')
         cfg.write('admin=' + user.username)
         cfg.close
-
-    def _administrate(self):
-        admin = Administration(self.master)
-        self.destroy()
-        admin.pack()
-
-    def _validate(self, *args):
-        username = self.username_ebx.get()
-        password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
         
-        user = self.um.retrieve_user(username)
-        
-        if user:
-            if user.password == password:
-                self._welcome(user)
-            else:
-                tkMessageBox.showerror('Error', 'Incorrect password')
-        else:
-            tkMessageBox.showerror('Error', 'No such user')
-
 class WelcomeScreen(Frame):
+    '''The view that is presented to a student after they have logged in, which
+    allows them to subsequently being spelling or view their scores.'''
     def __init__(self, user, master=None):
         Frame.__init__(self, master)
+        # Set the window title and bind enter to begin spelling and escape to
+        # log out.
         self.master.title('Welcome to Spellathon')
-        self.master.bind('<Return>', self.spelling_aid)
-        self.master.bind('<Escape>', self.log_out)
+        self.master.bind('<Return>', self._spelling_aid)
+        self.master.bind('<Escape>', self._log_out)
 
+        # Keep track of which user is logged in.
         self.user = user
         
         self._build()
         self._arrange()
         
+        #Set the initial focus to begin spelling.
         self.spelling_btn.focus_set()
         
     def _build(self):
+        '''Create the widgets.'''
+        # Images for buttons
         self.spelling_img = PhotoImage(file='images/spbee.gif')
         self.score_img = PhotoImage(file='images/score.gif')
         
+        # Buttons
         self.welcome_frame = LabelFrame(self, text='Welcome', **pad5)
         self.welcome_lbl = Label(self.welcome_frame, text='Welcome ' + self.user.realname + '!', **helv16)
         self.spelling_btn = Button(self.welcome_frame, text='Begin Spelling', 
-                                   command=self.spelling_aid, image=self.spelling_img, compound=BOTTOM, **helv16)
+                                   command=self._spelling_aid, image=self.spelling_img, compound=BOTTOM, **helv16)
         self.score_btn = Button(self.welcome_frame, text='View Scores', 
-                                command=self.score_frame, image=self.score_img, compound=BOTTOM, **helv16)
-        self.logout_btn = Button(self, text='Log out', command=self.log_out, **pad5)
+                                command=self._score_frame, image=self.score_img, compound=BOTTOM, **helv16)
+        self.logout_btn = Button(self, text='Log out', command=self._log_out, **pad5)
         
     def _arrange(self):
+        '''Arrange the widgets.'''
         self.welcome_frame.grid(**pad5)
         self.welcome_lbl.grid(**pad2)
         self.spelling_btn.grid(sticky='we', **pad2)
         self.score_btn.grid(sticky='we', **pad2)
         self.logout_btn.grid(sticky='we', **pad5)
         
-    def spelling_aid(self):
+    def _spelling_aid(self):
+        '''Create the spelling aid view and destroy this one.'''
         sa = SpellingAid(self.user, master=self.master)
         self.destroy()
         sa.pack()
         
-    def score_frame(self):
+    def _score_frame(self):
+        '''Show the score dialog.'''
         sc = Score(self.user, master=self, title=self.user.realname + ' Scores')
         
-    def log_out(self, *args):
-        if tkMessageBox.askokcancel('Log out', 'Are you sure you want to log out?'):
+    def _log_out(self, *args):
+        '''Return to the login screen.'''
+        if tkMessageBox.askokcancel('Log out',
+                                    'Are you sure you want to log out?'):
+            
             ln = Logon(master=self.master)
+            
+            # Unbind escape so if it is pressed after this window is destroyed,
+            # no error is thrown.
             self.master.unbind('<Escape>')
+            
             self.destroy()
             ln.pack()
 
@@ -271,11 +335,11 @@ class SpellingAid(Frame):
         self.word_definition_lbl = Text(self.word_metadata, height=5, state=DISABLED, font=('Helvetica', '10'))
         self.definition_lbl= Label(self.word_metadata, text='Definition:', **helv12)
         
-        self.score_frame = LabelFrame(self, text='Score', **pad5)
-        self.score_lbl = Label(self.score_frame, text='Score:', **helv12)
-        self.current_score_lbl= Label(self.score_frame, text='0/0', **helv16)
-        self.high_score_lbl = Label(self.score_frame, text='High score:', **helv12)
-        self.current_high_score_lbl = Label(self.score_frame, text='n/a', **helv16)
+        self._score_frame = LabelFrame(self, text='Score', **pad5)
+        self.score_lbl = Label(self._score_frame, text='Score:', **helv12)
+        self.current_score_lbl= Label(self._score_frame, text='0/0', **helv16)
+        self.high_score_lbl = Label(self._score_frame, text='High score:', **helv12)
+        self.current_high_score_lbl = Label(self._score_frame, text='n/a', **helv16)
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
@@ -295,7 +359,7 @@ class SpellingAid(Frame):
         self.buttons.grid(column=0, row=5, columnspan=2)
         self.word_metadata.grid(column=0, row=6, sticky='we', columnspan=2, **pad5)
         
-        self.score_frame.grid(column=0, row=7, sticky='we', columnspan=2, **pad5)
+        self._score_frame.grid(column=0, row=7, sticky='we', columnspan=2, **pad5)
         
         self.exit_btn.grid(column=0, row=8, sticky='we', padx=5, pady=2)
         
@@ -397,11 +461,11 @@ class SpellingComplete(Dialog):
     def _build(self):
         self.list_complete_lbl = Label(self, text='You have completed ' + self.list)
 
-        self.score_frame = LabelFrame(self, text='Score', **pad5)
-        self.score_lbl = Label(self.score_frame, text='Score:', **helv12)
-        self.current_score_lbl= Label(self.score_frame, text=str(self.score), **helv16)
-        self.high_score_lbl = Label(self.score_frame, text='High score:', **helv12)
-        self.current_high_score_lbl = Label(self.score_frame, text=str(self.highscore), **helv16)
+        self._score_frame = LabelFrame(self, text='Score', **pad5)
+        self.score_lbl = Label(self._score_frame, text='Score:', **helv12)
+        self.current_score_lbl= Label(self._score_frame, text=str(self.score), **helv16)
+        self.high_score_lbl = Label(self._score_frame, text='High score:', **helv12)
+        self.current_high_score_lbl = Label(self._score_frame, text=str(self.highscore), **helv16)
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
@@ -426,7 +490,7 @@ class SpellingComplete(Dialog):
     def _arrange(self):
         self.list_complete_lbl.grid(column=0, row=0, **pad2)
         
-        self.score_frame.grid(column=0, row=1, sticky='we', **pad5)
+        self._score_frame.grid(column=0, row=1, sticky='we', **pad5)
         
         self.congratulations_lbl.grid(column=0, row=2, **pad2)
         
@@ -531,13 +595,13 @@ class Administration(Frame):
         tabs = {'Manage Users': um, 'Manage Lists': lm}
         
         self.tabs = TabBar(self, tabs=tabs)
-        self.logout = Button(self, text="Log out", command=self.log_out)
+        self.logout = Button(self, text="Log out", command=self._log_out)
         
     def _arrange(self):
         self.tabs.grid(row=0, column=0, sticky="we")
         self.logout.grid(row=2, column=0, sticky="e", **pad5)
         
-    def log_out(self):
+    def _log_out(self):
         if tkMessageBox.askokcancel('Log out', 'Are you sure you want to log out?'):
             logon = Logon(self.master)
             self.destroy()
