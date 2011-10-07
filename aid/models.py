@@ -10,16 +10,61 @@ import tkMessageBox
 import tools.tldr as tldr
 import aid.database as db
 
-
+class WordDestinationModel(object):
+    def __init__(self, interface, listname, listbox, filter, filtervar):
+        self.interface = interface
+        self.listname = listname
+        self.listbox = listbox
+        self.filter = filter
+        self.filtervar = filtervar
+        
+        self.listbox.add_listener(self)
+        
+        self.wordlist = tldr.parse_tldr('wordlists/' + listname + '.tldr', listname)
+                
+        self.listbox.items = self.wordlist.words
+        self.listbox.update
+        
+    def listbox_select(self, string, word):
+        self.interface.update_metadata(word)
+        
 class WordSourceModel(object):
-    def __init__(self, optionmenu, optionmenuvar, listbox, filter):
+    def __init__(self, interface, optionmenu, optionmenuvar, listbox, filter, filtervar):
+        self.interface = interface
         self.optionmenu = optionmenu
         self.optionmenuvar = optionmenuvar
         self.listbox = listbox
         self.filter = filter
+        self.filtervar = filtervar
+        self.items = {}
         
+        self.optionmenuvar.trace('w', self.source_chosen)
+        self.filtervar.trace('w', self.filter_listbox)
         self.wm = db.get_word_manager()
-        self.words = self.wm.retrieve_words()
+        
+        self.listbox.add_listener(self)
+            
+    def source_chosen(self, *args):
+        words = self.wm.retrieve_words_of_difficulty(self.optionmenuvar.get())
+        
+        for word in words:
+            self.items[word.word] = word
+            
+        self.listbox.items = self.items
+        self.listbox.update()
+        
+    def filter_listbox(self, *args):
+        self.listbox.items = {}
+        
+        for key, value in self.items.iteritems():
+            if not key.lower().find(self.filtervar.get().lower()):
+                self.listbox.items[key] = value                
+        
+        self.listbox.update()
+        
+    def listbox_select(self, string, word):
+        self.interface.update_metadata(word)
+
 
 class ListEditModel(object):
     def __init__(self):

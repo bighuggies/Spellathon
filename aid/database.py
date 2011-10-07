@@ -278,7 +278,7 @@ class _WordManager(_DBManager):
         # For all words in the database, if the word has the requested
         # difficulty, add that word to the list to be returned.
         for row in self.c:
-            if row[0].difficulty == difficulty:
+            if row[0].difficulty.strip() == difficulty:
                 words.append(row[0])
         
         return words

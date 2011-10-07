@@ -35,7 +35,7 @@ def parse_tldr_files(path):
     tldrs = {}
     
     for t in glob.glob(path + '*.tldr'):
-        tldrs[t[10:-5]] = parse_tldr(t, t[13:-5])
+        tldrs[t[10:-5]] = parse_tldr(t, t[10:-5])
 
     return tldrs
 
@@ -63,13 +63,10 @@ def generate_tldr(words, tldrfile):
     
     keys = []
     for string in sorted(words.words.iterkeys(), key=str.lower):
-        print string
         keys.append(string)
     
     for k in keys:
-        print 'key = ' + k
         newword = words.words[k].serialise()
-        print 'new word = ' + newword
         if newword[-1] != '\n':
             newword += '\n'
         f.write(newword)

@@ -4,6 +4,8 @@ from aid.models import *
 import subprocess
 import tkMessageBox
 
+import aid.database as db
+
 # List of all the files necessary to run the program.
 files = {'images' :['example.gif', 'go.gif', 'main.gif', 'score.gif',
                     'spbee.gif', 'speak.gif', 'stop.gif', 'submit.gif'], 'config': ['.config']}

@@ -13,6 +13,7 @@ import tools.tldr as tldr
 import database
 from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
 from models import *
+from aid.speech import Speech
 
 '''
 Option constants for widgets
@@ -22,6 +23,7 @@ pad2 = {'padx' : 2, 'pady' : 2}
 pad5 = {'padx' : 5, 'pady' : 5}
 helv12 = {'font' : ('Helvetica', 12)}
 helv16 = {'font' : ('Helvetica', 16)}
+difficulties = ['CL1', 'CL2', 'CL3', 'CL4', 'CL5', 'CL6', 'CL7', 'CL8', 'AL1', 'AL2']
 
 class NewWord(Dialog):
     def build(self):
@@ -98,6 +100,7 @@ class NewList(Dialog):
 class ListEdit(Dialog):
     def __init__(self, listname, master=None):
         self.listname = listname
+        self.word = None
         
         Dialog.__init__(self, master, title='Edit list', btncolumn=0)
     
@@ -106,12 +109,15 @@ class ListEdit(Dialog):
         self.destination_frame = LabelFrame(self, text=self.listname, **pad5)
         
         self.source_var = StringVar()
-        self.source_opt = OptionMenu(self.source_frame, self.source_var, 'test', 'test2')
-        
+        self.source_opt = OptionMenu(self.source_frame, self.source_var, *difficulties)
+
         self.source_words_lbx = ScrollListbox(self.source_frame)
-        self.source_filter_ebx = Entry(self.source_frame)
+        self.source_filter_var = StringVar()
+        self.source_filter_ebx = Entry(self.source_frame, textvariable=self.source_filter_var)
         
-        self.source_opt_model = WordSourceModel(self.source_opt, self.source_var, self.source_words_lbx, self.source_filter_ebx)
+        self.source_model = WordSourceModel(self, self.source_opt, self.source_var, self.source_words_lbx, self.source_filter_ebx, self.source_filter_var)
+        
+        self.source_var.set('CL1')
 
         
         self.control_column = Frame(self)
@@ -127,16 +133,18 @@ class ListEdit(Dialog):
         
         self.destination_lbl = Label(self.destination_frame, text='List contents:')
         self.destination_lbx = ScrollListbox(self.destination_frame)
+        self.destination_filter_var = StringVar()
         self.destination_filter_ebx = Entry(self.destination_frame)
         
+        self.destination_model = WordDestinationModel(self, self.listname, self.destination_lbx, self.destination_filter_ebx, self.destination_filter_var)
         
         self.word_metadata = LabelFrame(self, text='Word', **pad5)
                 
         self.definition_lbl= Label(self.word_metadata, text='Definition:')
         self.example_lbl = Label(self.word_metadata, text='Example:')
-        self.word_definition_lbl = Label(self.word_metadata, text='No definition', wraplength=200)
-        self.word_example_lbl = Label(self.word_metadata, text='No example', wraplength=200)
-        self.speak_btn = Button(self.word_metadata, text='Speak')
+        self.word_definition_lbl = Label(self.word_metadata, text='No definition', wraplength=500, justify=LEFT)
+        self.word_example_lbl = Label(self.word_metadata, text='No example', wraplength=500,justify=LEFT)
+        self.speak_btn = Button(self.word_metadata, text='Speak', command=self.speak)
                 
     def arrange(self):
         self.source_frame.grid(column=0, row=0, sticky='nswe', **pad5)
@@ -158,11 +166,23 @@ class ListEdit(Dialog):
         
         self.word_metadata.grid(column=0, row=1, columnspan=3, sticky='we', **pad5)
         
-        self.definition_lbl.grid(column=0, row=0, sticky='w', **pad2)
-        self.example_lbl.grid(column=0, row=1, sticky='w', **pad2)
-        self.word_definition_lbl.grid(column=1, row=0, sticky='w', **pad2)
-        self.word_example_lbl.grid(column=1, row=1, sticky='w', **pad2)
-        self.speak_btn.grid(column=0, row=2, sticky='w', columnspan=2, **pad2)
+        self.definition_lbl.grid(column=0, row=0, sticky='nw', **pad2)
+        self.example_lbl.grid(column=0, row=1, sticky='nw', **pad2)
+        self.word_definition_lbl.grid(column=1, row=0, sticky='nw', **pad2)
+        self.word_example_lbl.grid(column=1, row=1, sticky='nw', **pad2)
+        self.speak_btn.grid(column=0, row=2, sticky='nw', columnspan=2, **pad2)
+    
+    def speak(self):
+        if self.word:
+            speech = Speech()
+            speech.speak(self.word.word)
+        else:
+            tkMessageBox.showerror('Error', 'No word selected')
+        
+    def update_metadata(self, word):
+        self.word = word
+        self.word_definition_lbl.config(text=word.definition)
+        self.word_example_lbl.config(text=word.example)
 
 class ListManagement(Frame):
     def __init__(self, master=None):
@@ -202,7 +222,10 @@ class ListManagement(Frame):
             self.list_model.delete()
             
     def list_edit(self):
-        le = ListEdit(self.list_lbx.get(), master=self)
+        if self.list_lbx.get():
+            le = ListEdit(self.list_lbx.get(), master=self)
+        else:
+            tkMessageBox.showerror('Error', 'Please select a list to edit.')
         
     def import_list(self):
         listfile = tkFileDialog.askopenfilename(filetypes=[('tldr files', '.tldr')])

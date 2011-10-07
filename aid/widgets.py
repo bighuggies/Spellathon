@@ -113,12 +113,13 @@ class MultiScrollListbox(Frame):
         Frame.__init__(self, master)
         self.listboxes=[]
         self.curselection = None
+        self.listeners = []
         
         if items:
             self.items = items        
             self.build()
             self.arrange()
-            self.bind()
+            self.bindings()
             self.update()
         
     def build(self):
@@ -137,7 +138,10 @@ class MultiScrollListbox(Frame):
 
         self.scrollbar.pack(side=RIGHT, fill=Y)
 
-    def bind(self):
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+
+    def bindings(self):
         for listbox in self.listboxes:
             listbox.bind('<MouseWheel>', self.on_mwheel)
             listbox.bind('<Button-4>', self.on_mwheel)
@@ -170,6 +174,10 @@ class MultiScrollListbox(Frame):
 
         self.curselection = (self.listboxes[0].get(lindex))
         
+        if self.listeners:
+            for listener in self.listeners:
+                listener.lisbox_select(self.curselection)
+        
     def get(self):
         return self.curselection
             
@@ -178,8 +186,8 @@ class MultiScrollListbox(Frame):
             self.listboxes[i].delete(first=0, last=END)
 
             for item in self.items:
-                lol = list(item)
-                self.listboxes[i].insert(END, lol[i])
+                l = list(item)
+                self.listboxes[i].insert(END, l[i])
                                 
 class ScrollListbox(Frame):
     def __init__(self, master, items=None):
@@ -197,8 +205,13 @@ class ScrollListbox(Frame):
         self.scrollbar.pack(side=RIGHT, fill=Y)
         self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
         
+        self.listbox.bind('<<ListboxSelect>>', self.on_listbox_select)
+        self.listeners = []
+        self.curselection = None
+    
     def insert(self, name, item):
         self.items[name] = item
+        self.update()
         
     def delete(self, name='', item=None):
         try:
@@ -211,6 +224,18 @@ class ScrollListbox(Frame):
     def update(self):
         self.listbox.delete(first=0, last=END)
         self.listbox.insert(END, *sorted(self.items.keys()))
+        
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+        
+    def on_listbox_select(self, event):
+        lindex = int(event.widget.curselection()[0])
+        self.curselection = (self.listbox.get(lindex))
+
+        if self.listeners:
+            for listener in self.listeners:
+                listener.listbox_select(self.curselection, self.items[self.curselection])
+        
 
 class Dialog(Toplevel):
     def __init__(self, master, title=None, btncolumn=100, btnrow=100):
