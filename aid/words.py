@@ -15,12 +15,10 @@ class Word(object):
         '''Create a word with a definition, example use, and difficulty level.
         
         Arguments:
-        
-        word -- The word itself
-        definition -- A definition of the word (default = '')
-        example -- An example use of the word (default = '')
+        word -- The word itself.
+        definition -- A definition of the word.
+        example -- An example use of the word.
         difficulty -- An integer representation of the spelling difficulty.
-        (default = -1)
                 
         '''
         self.word = word
@@ -73,7 +71,7 @@ class WordList(object):
         '''Add a word to the list of words.
         
         Arguments:
-        word -- string or Word() representation of a word
+        word -- string or Word() representation of a word.
         
         '''
         try:
@@ -85,7 +83,7 @@ class WordList(object):
         '''Delete a word from the list of words.
         
         Arguments:
-        word -- string or Word() representation of a word
+        word -- string or Word() representation of a word.
         
         Returns:
         A boolean where True represents successfully deleting a word.
@@ -103,7 +101,7 @@ class WordList(object):
         '''Get a word from the list of words.
         
         Arguments:
-        word -- string or Word() representation of a word
+        word -- string or Word() representation of a word.
         
         Returns:
         The word object representing a given word in the word list. If the word
