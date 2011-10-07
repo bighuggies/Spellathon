@@ -4,8 +4,8 @@ Handle the word and user tables in the Spellathon database.
 '''
 import sqlite3 as sqlite
 import os
-from user import User
-from words import Word
+from aid.user import User
+from aid.words import Word
 
 '''Initialisation script to create the tables if the database file is not found.
 The primary key of a word record is the word itslf, associated with a word

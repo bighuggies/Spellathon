@@ -1,10 +1,9 @@
-from aid.views import Logon, FirstRun
-from Tkinter import *
-from aid.models import *
+from aid.views import Logon
+from Tkinter import Tk
 import subprocess
 import tkMessageBox
-
-import aid.database as db
+import os
+import tools.database as db
 
 # List of all the files necessary to run the program.
 files = {'images' :['example.gif', 'go.gif', 'main.gif', 'score.gif',
@@ -12,7 +11,7 @@ files = {'images' :['example.gif', 'go.gif', 'main.gif', 'score.gif',
 
 def check_festival():
     '''
-    Try run festival to check if it's installed. If not show an error and don't
+    Try run festival to check if it's installed. If not. show an error and don't
     run the program.
     '''
     try:
@@ -28,10 +27,29 @@ def check_festival():
     
 def check_files():
     '''
-    Check that all the necessary images exist in the images folder.
+    Check that all the necessary images exist in the images folder and that the
+    administrator specified in the config file exists.
     '''
+    try:
+        f = open('.config', 'r')
+        admin = f.readline().split('=')[1]
+        f.close()
+        
+        um = db.get_user_manager()
+        
+        # If the specified admin is not in the database, delete the config.
+        # This will cause the logon screen to re-prompt user to create an admin
+        # account.
+        if not um.retrieve_user(admin):
+            os.remove('.config')
+            print 'Removed cfg'
+    except IOError:
+        # If the config doesn't exist, we don't care because the logon screen
+        # will prompt the user to create an admin account.
+        pass
     
     for image in files['images']:
+        # Check that each image exists
         try:
             f = open('images/' + image, 'r')
             f.close()
@@ -49,11 +67,6 @@ if __name__ == '__main__':
         root.resizable(False, False)
         logon = Logon(root)
         logon.pack()
-
-#        if check_first_run():
-##            fr = FirstRun(root, btncolumn=0)
-##            fr.pack()
-#        else:
 
         # Enter the mainloop and begin the program.
         root.mainloop()

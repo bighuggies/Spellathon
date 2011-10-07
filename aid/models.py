@@ -8,7 +8,37 @@ import shutil
 import os
 import tkMessageBox
 import tools.tldr as tldr
-import aid.database as db
+import tools.database as db
+
+class UserListModel(object):
+    def __init__(self, listbox):
+        self.listbox = listbox
+        self.listbox.add_listener(self)
+        self.user = None
+        
+        self.um = db.get_user_manager()
+        self.users = self.um.retrieve_users()
+        
+        self.update_items()
+
+    def update_items(self):
+        items = []
+        users = self.um.retrieve_users()
+        
+        for user in users:
+            items.append((user.username, user.realname, user.dob))
+            
+        self.listbox.items = sorted(items)
+        self.listbox.update()
+        
+    def delete_user(self):
+        if tkMessageBox.askokcancel('Delete user', 'Delete the selected user?'):
+            self.um.remove_user(self.listbox.get())
+            self.update_items()
+            self.um.commit()
+            
+    def listbox_select(self, selection, index):
+        self.user = self.users[index]
 
 class WordDestinationModel(object):
     def __init__(self, interface, listname, listbox, filter, filtervar):
@@ -108,16 +138,22 @@ class TLDROptionMenuModel(object):
     def update_entries(self):
         self.optionmenu['menu'].delete(0, END)
 
-        for i in sorted(self.wordlists.keys()):
-            self.optionmenu['menu'].add_command(label=i, command=lambda temp = i: self.optionmenu.setvar(self.optionmenu.cget('textvariable'), value = temp))
-        
-        self.optionmenuvar.set(sorted(self.wordlists.keys())[0])
+        if self.wordlists:
+            for i in sorted(self.wordlists.keys()):
+                self.optionmenu['menu'].add_command(label=i, command=lambda temp = i: self.optionmenu.setvar(self.optionmenu.cget('textvariable'), value = temp))
+            
+            self.optionmenuvar.set(sorted(self.wordlists.keys())[0])
+        else:
+            self.optionmenuvar.set("")
         
     def get_list_name(self):
         return self.optionmenuvar.get()
     
     def get_list(self):
-        return self.wordlists[self.optionmenuvar.get()]
+        if self.optionmenuvar.get() != "":
+            return self.wordlists[self.optionmenuvar.get()]
+        else:
+            return None
         
 class TLDRMultiScrollListbox(object):
     def __init__(self, listbox):
@@ -144,20 +180,21 @@ class TLDRMultiScrollListbox(object):
             # Add the list
             self.update_items()
         except Exception:
-            tkMessageBox.showerror('Error', 'That list already exists.')
+            tkMessageBox.showerror('Error', 'Either no file was selected or that list already exists.')
         
     def delete(self):
         tldr = self.listbox.get()
         
-        del self.wordlists[tldr]
-        
-        try:
-            shutil.copy('wordlists/' + tldr + '.tldr', 'trash/' + tldr + '.tldr')
-        except IOError:
-            os.mkdir('trash')
-            shutil.copy('wordlists/' + tldr + '.tldr', 'trash/' + tldr + '.tldr')
+        if tldr:
+            del self.wordlists[tldr]
+            try:
+                shutil.copy('wordlists/' + tldr + '.tldr', 'trash/' + tldr + '.tldr')
+            except IOError:
+                os.mkdir('trash')
+                shutil.copy('wordlists/' + tldr + '.tldr', 'trash/' + tldr + '.tldr')
             
-        os.remove('wordlists/' + tldr + '.tldr')
-
+            os.remove('wordlists/' + tldr + '.tldr')
+        else:
+            tkMessageBox.showerror('Error', 'No list selected.')
+        
         self.update_items()
-

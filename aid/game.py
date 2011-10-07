@@ -4,8 +4,8 @@ Created on 5/10/2011
 @author: andrew
 '''
 import random
-import database
-from speech import Speech
+import tools.database as database
+from tools.speech import Speech
 #from user import User
 
 class Session(object):

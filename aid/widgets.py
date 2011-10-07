@@ -86,19 +86,20 @@ class TabBar(Frame):
         self.switch_tab()
         
     def build(self):
-        self.tab_frame = Frame(self)
+        self.tab_frame = Frame(self, relief=SUNKEN, padx=5, pady=5)
         
         for name in self.tabs.iterkeys():
             self.tab_buttons.append(Radiobutton(self.tab_frame, text=name,
                                                 variable=self.tab_var,
                                                 value=name, indicatoron=0,
-                                                command = self.switch_tab))
+                                                command = self.switch_tab,
+                                                height=1, padx=5, pady=5))
         
     def arrange(self):
-        self.tab_frame.grid(row=0, column=0)
+        self.tab_frame.grid(row=0, column=0, sticky="we")
         
         for i, button in enumerate(self.tab_buttons):
-            button.grid(column=i, row=0)
+            button.grid(column=i, row=0, sticky="we", padx=2, pady=2)
             
     def switch_tab(self):
         newtab = self.tab_var.get()
@@ -109,11 +110,17 @@ class TabBar(Frame):
         self.tabs[newtab].grid(column=0,row=1)
 
 class MultiScrollListbox(Frame):
-    def __init__(self, master=None, items=None):
+    def __init__(self, master=None, items=None, headers=None):
         Frame.__init__(self, master)
-        self.listboxes=[]
+        self.listboxes = []
+        
+        if headers:
+            self.headers = headers
+        else:
+            self.headers = []
         self.curselection = None
         self.listeners = []
+        self.header_frames = []
         
         if items:
             self.items = items        
@@ -129,14 +136,31 @@ class MultiScrollListbox(Frame):
             self.listboxes.append(Listbox(self, yscrollcommand=self.scrollbar.set,
                                   selectmode='single', borderwidth=1, 
                                   selectborderwidth=0, exportselection=0))
+            
+        for i, header in enumerate(self.headers):
+            frame = Frame(self, relief=SUNKEN)
+            label = Label(frame, text=header)
+            label.grid()
+            self.header_frames.append(frame)
 
         self.scrollbar.config(command=self.on_vertical_scrollbar)
         
     def arrange(self):
-        for listbox in self.listboxes:
-            listbox.pack(side=LEFT, fill=BOTH, expand=1)
-
-        self.scrollbar.pack(side=RIGHT, fill=Y)
+        for i, header in enumerate(self.header_frames):
+            header.grid(column=i, row=0, sticky="we")
+            
+        for i, listbox in enumerate(self.listboxes):
+            listbox.grid(column=i, row=1, sticky="we")
+            
+        self.scrollbar.grid(column=100, row=1, sticky="ns")
+        
+#        for listbox in self.listboxes:
+#            listbox.pack(side=LEFT, fill=BOTH, expand=1)
+#            
+#        for header in self.header_frames:
+#            header.pack(side=TOP, fill=BOTH, expand=1)
+#
+#        self.scrollbar.pack(side=RIGHT, fill=Y)
 
     def add_listener(self, listener):
         self.listeners.append(listener)
@@ -166,17 +190,21 @@ class MultiScrollListbox(Frame):
         return 'break'
     
     def on_listbox_select(self, event):
-        lindex = int(event.widget.curselection()[0])
-        
-        for listbox in self.listboxes:
-            listbox.selection_clear(0, END)
-            listbox.selection_set(lindex)
+        try:
+            lindex = int(event.widget.curselection()[0])
+            
+            for listbox in self.listboxes:
+                listbox.selection_clear(0, END)
+                listbox.selection_set(lindex)
+                
+            self.curselection = (self.listboxes[0].get(lindex))
 
-        self.curselection = (self.listboxes[0].get(lindex))
+        except IndexError:
+            self.curselection = None
         
         if self.listeners:
             for listener in self.listeners:
-                listener.lisbox_select(self.curselection)
+                listener.listbox_select(self.curselection, index=lindex)
         
     def get(self):
         return self.curselection
