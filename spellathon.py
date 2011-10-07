@@ -61,6 +61,7 @@ def check_files():
     return True
 
 if __name__ == '__main__':
+    '''Run spellathon.'''
     if check_files() and check_festival():
         # Create the widgets.
         root = Tk()

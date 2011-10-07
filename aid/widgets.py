@@ -4,7 +4,6 @@ Created on 23/09/2011
 @author: Andrew
 '''
 from Tkinter import *
-import os
 import datetime
 import tkMessageBox
 
@@ -12,10 +11,10 @@ class DateEntry(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
         
-        self.build()
-        self.arrange()
+        self._build()
+        self._arrange()
         
-    def build(self):
+    def _build(self):
         self.day_lbl = Label(self, text='Day:')
         self.month_lbl = Label(self, text='Month:')
         self.year_lbl = Label(self, text='Year:')
@@ -32,7 +31,7 @@ class DateEntry(Frame):
         
         for i, var in enumerate(self.vars):
             var.set(self.defaults[i])
-            var.trace('w', self.validate)
+            var.trace('w', self._validate)
         
         days = []
         months = []
@@ -54,14 +53,14 @@ class DateEntry(Frame):
         self.widgets = [self.day_lbl, self.day_opt, self.month_lbl, self.month_opt,
                    self.year_lbl, self.year_opt]
         
-    def arrange(self):
+    def _arrange(self):
         for i, w in enumerate(self.widgets):
             w.grid(column=i, row=0, padx=2, pady=2, sticky='we')
             
     def get(self):
         return self.date
         
-    def validate(self, *args):
+    def _validate(self, *args):
         try:
             self.date = datetime.date(self.year_var.get(), self.month_var.get(), self.day_var.get())
         except ValueError:
@@ -81,11 +80,11 @@ class TabBar(Frame):
         
         self.tab_buttons = []
         
-        self.build()
-        self.arrange()
+        self._build()
+        self._arrange()
         self.switch_tab()
         
-    def build(self):
+    def _build(self):
         self.tab_frame = Frame(self, relief=SUNKEN, padx=5, pady=5)
         
         for name in self.tabs.iterkeys():
@@ -95,7 +94,7 @@ class TabBar(Frame):
                                                 command = self.switch_tab,
                                                 height=1, padx=5, pady=5))
         
-    def arrange(self):
+    def _arrange(self):
         self.tab_frame.grid(row=0, column=0, sticky="we")
         
         for i, button in enumerate(self.tab_buttons):
@@ -124,12 +123,12 @@ class MultiScrollListbox(Frame):
         
         if items:
             self.items = items        
-            self.build()
-            self.arrange()
+            self._build()
+            self._arrange()
             self.bindings()
             self.update()
         
-    def build(self):
+    def _build(self):
         self.scrollbar = Scrollbar(self, orient=VERTICAL)            
         
         for i in range(0, len(self.items[0])):
@@ -145,7 +144,7 @@ class MultiScrollListbox(Frame):
 
         self.scrollbar.config(command=self.on_vertical_scrollbar)
         
-    def arrange(self):
+    def _arrange(self):
         for i, header in enumerate(self.header_frames):
             header.grid(column=i, row=0, sticky="we")
             
@@ -278,8 +277,8 @@ class Dialog(Toplevel):
             
         self.result = None
         
-        self.build()
-        self.arrange()
+        self._build()
+        self._arrange()
         self.buttonbox(btncolumn, btnrow)
 
 #        body.grid(row=0, column=0, padx=5, pady=5, sticky='nswe')
@@ -300,13 +299,13 @@ class Dialog(Toplevel):
     #
     # construction hooks
 
-    def build(self):
+    def _build(self):
         # create dialog body.
 
         pass
     
-    def arrange(self):
-        # arrange widgets
+    def _arrange(self):
+        # _arrange widgets
         
         pass
 
@@ -331,7 +330,7 @@ class Dialog(Toplevel):
 
     def ok(self, event=None):
 
-        if not self.validate():
+        if not self._validate():
             return
 
         self.withdraw()
@@ -350,7 +349,7 @@ class Dialog(Toplevel):
     #
     # command hooks
 
-    def validate(self):
+    def _validate(self):
 
         return 1 # override
 

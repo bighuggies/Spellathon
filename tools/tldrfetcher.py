@@ -6,7 +6,6 @@ Credit to Tony Young for this script.
 import re
 import json
 import urllib2
-import sys
 
 HTML_TAG_PATTERN = re.compile(r'<.*?>')
 HEX_ESCAPE_PATTERN = re.compile(r'\\x([a-fA-F0-9]{2})')

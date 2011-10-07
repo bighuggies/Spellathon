@@ -4,7 +4,6 @@ Created on Sep 29, 2011
 @author: ahug048
 '''
 import pickle
-import os
 import shutil
 
 class User(object):
