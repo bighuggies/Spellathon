@@ -9,9 +9,10 @@ import tkMessageBox
 import tkFileDialog
 from user import User
 from game import Session
-from database import UserManager
+import tools.tldr as tldr
+import database
 from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
-from models import TLDROptionMenuModel
+from models import *
 
 '''
 Option constants for widgets
@@ -44,16 +45,74 @@ class NewWord(Dialog):
             
         for i, field in enumerate(self.fields):
             field.grid(column=1, row=i, sticky='we', **pad2)
+            
+class NewList(Dialog):
+    def __init__(self, model, master=None, title="New list", btncolumn=0):
+        self.model = model
+        
+        Dialog.__init__(self, master, title, btncolumn)
+    
+    def build(self):
+        self.list_information_frame = LabelFrame(self, text='List details', **pad5)
+        self.name_lbl = Label(self.list_information_frame, text='Name:')
+        self.author_lbl = Label(self.list_information_frame, text='Author:')
+        
+        self.name_ebx = Entry(self.list_information_frame)
+        self.author_ebx = Entry(self.list_information_frame)
+        
+        self.labels = [self.name_lbl, self.author_lbl]
+        self.fields = [self.name_ebx, self.author_ebx]
+
+    def arrange(self):
+        self.list_information_frame.grid(column=0, row=0, sticky='nswe', **pad5)
+        
+        for i, label in enumerate(self.labels):
+            label.grid(column=0, row=i, sticky='nw', **pad2)
+            
+        for i, field in enumerate(self.fields):
+            field.grid(column=1, row=i, sticky='we', **pad2)
+        
+    def validate(self):
+        name = self.name_ebx.get()
+        author = self.author_ebx.get()
+        
+        if name == "":
+            tkMessageBox.showerror("Error", "Please enter a list name.")
+            return False
+        
+        if author == "":
+            tkMessageBox.showerror('Error', 'Please enter a list author')
+            return False
+        
+        return True
+        
+    def apply(self):
+        name = self.name_ebx.get()
+        author = self.author_ebx.get()
+        path = 'wordlists/' + name + '.tldr'
+        
+        tldr.generate_empty_tldr(path, name, author)
+        
+        self.model.update_items()
 
 class ListEdit(Dialog):
+    def __init__(self, listname, master=None):
+        self.listname = listname
+        
+        Dialog.__init__(self, master, title='Edit list', btncolumn=0)
+    
     def build(self):
         self.source_frame = LabelFrame(self, text='Source', **pad5)
-        self.destination_frame = LabelFrame(self, text='Destination', **pad5)
+        self.destination_frame = LabelFrame(self, text=self.listname, **pad5)
         
         self.source_var = StringVar()
         self.source_opt = OptionMenu(self.source_frame, self.source_var, 'test', 'test2')
+        
         self.source_words_lbx = ScrollListbox(self.source_frame)
         self.source_filter_ebx = Entry(self.source_frame)
+        
+        self.source_opt_model = WordSourceModel(self.source_opt, self.source_var, self.source_words_lbx, self.source_filter_ebx)
+
         
         self.control_column = Frame(self)
         self.add_btn = Button(self.control_column, text='Add word >')
@@ -78,11 +137,11 @@ class ListEdit(Dialog):
         self.word_definition_lbl = Label(self.word_metadata, text='No definition', wraplength=200)
         self.word_example_lbl = Label(self.word_metadata, text='No example', wraplength=200)
         self.speak_btn = Button(self.word_metadata, text='Speak')
-        
+                
     def arrange(self):
         self.source_frame.grid(column=0, row=0, sticky='nswe', **pad5)
         
-        self.source_opt.grid(column=0, row=0, **pad2)
+        self.source_opt.grid(column=0, row=0, sticky="we", **pad2)
         self.source_words_lbx.grid(column=0, row=1, sticky='nswe', **pad2)
         self.source_filter_ebx.grid(column=0, row=2, sticky='nswe', **pad2)
         
@@ -112,21 +171,17 @@ class ListManagement(Frame):
         self.arrange()
         
     def build(self):
-        #####
-        items = []
-    
-        for i in range(1,50):
-            items.append((i, i, i))
-        #####
+        items = [(0, 0, 0, 0)]
         
         self.manage_lists_frame = LabelFrame(self, text='Manage lists', **pad5)
         
         self.list_lbx = MultiScrollListbox(self.manage_lists_frame, items)
+        self.list_model = TLDRMultiScrollListbox(self.list_lbx)
         
-        self.new_list_btn = Button(self.manage_lists_frame, text='New list')
-        self.delete_list_btn = Button(self.manage_lists_frame, text='Delete list')
-        self.edit_list_btn = Button(self.manage_lists_frame, text='Edit list')
-        self.import_list_btn = Button(self.manage_lists_frame, text='Import list')
+        self.new_list_btn = Button(self.manage_lists_frame, text='New list', command=self.new_list)
+        self.delete_list_btn = Button(self.manage_lists_frame, text='Delete list', command=self.delete_list)
+        self.edit_list_btn = Button(self.manage_lists_frame, text='Edit list', command=self.list_edit)
+        self.import_list_btn = Button(self.manage_lists_frame, text='Import list', command=self.import_list)
         
         self.controls = [self.new_list_btn, self.delete_list_btn,
                          self.edit_list_btn, self.import_list_btn]
@@ -138,6 +193,20 @@ class ListManagement(Frame):
         
         for i, control in enumerate(self.controls):
             control.grid(column=1, row=i, sticky='we', padx=5, pady=2)
+            
+    def new_list(self):
+        nl = NewList(self.list_model, master=self, title="New list", btncolumn=0)
+            
+    def delete_list(self):
+        if tkMessageBox.askokcancel('Delete list', 'Are you sure you want to delete the currently selected list?'):
+            self.list_model.delete()
+            
+    def list_edit(self):
+        le = ListEdit(self.list_lbx.get(), master=self)
+        
+    def import_list(self):
+        listfile = tkFileDialog.askopenfilename(filetypes=[('tldr files', '.tldr')])
+        self.list_model.import_list(listfile)
 
 class UserManagement(Frame):
     def __init__(self, master=None):
@@ -176,8 +245,7 @@ class UserManagement(Frame):
 class Administration(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.title('Administration')
-        self.resizable(False, False)
+        self.master.title('Administration')
         self.build()
         self.arrange()
         
@@ -200,7 +268,7 @@ class Logon(Frame):
         
         self.build()
         self.arrange()
-        
+                        
         self.username_ebx.focus_set()
         
     def build(self):
@@ -220,10 +288,9 @@ class Logon(Frame):
         self.userinfo = [self.username_lbl, self.username_ebx, 
                          self.password_lbl, self.password_ebx, self.login_btn, self.new_user_btn]
 
-        self.administrate_btn = Button(self, text='Administrate')
+        self.administrate_btn = Button(self, text='Administrate', command=self.validate_admin)
 
         self.elements = [self.logo_lbl, self.heading_lbl, self.loginframe, self.administrate_btn]
-        
         
     def arrange(self):
         
@@ -235,19 +302,66 @@ class Logon(Frame):
         for i, widget in enumerate(self.userinfo):
             widget.grid(column=0, row=i, sticky='we', **pad2)
             
+    def load_config(self):
+        try:
+            cfg = open('.config', 'r')
+            admin = cfg.readline().split('=')
+            cfg.close()
+            if admin[0] == 'admin':
+                return admin[1]
+            else:
+                return False
+        except IOError:
+            return False
+                
+    def first_run(self):
+        fr = FirstRun(self, btncolumn=0, title='Create administrator password')
+                        
     def new_user(self):
-        nu = NewUser(self, title='Create new user', btncolumn=0)
+        nu = NewUser(self, btncolumn=0, title='New user')
         
     def welcome(self, user):
         ws = WelcomeScreen(user, master=self.master)
         self.destroy()
         ws.pack()
         
+    def validate_admin(self):
+        admin = self.load_config()
+        
+        if admin:
+            username = self.username_ebx.get()
+            
+            if username == admin:
+                
+                password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
+                
+                um = database.get_user_manager()
+                user = um.retrieve_user(username)
+                
+                if user:
+                    if user.password == password:
+                        self.administrate()
+                    else:
+                        tkMessageBox.showerror('Error', 'Incorrect password')
+                else:
+                    tkMessageBox.showerror('Error', 'No such user')
+                    
+            else:
+                tkMessageBox.showerror('Error', 'You are not an administrator')
+        else:
+            self.first_run()
+            
+
+    def administrate(self):
+        admin = Administration(self.master)
+        self.destroy()
+        admin.pack()
+
     def validate(self, *args):
         username = self.username_ebx.get()
         password = hashlib.sha224(username + self.password_ebx.get()).hexdigest()
         
-        um = UserManager()
+        um = database.get_user_manager()
         user = um.retrieve_user(username)
         
         if user:
@@ -257,8 +371,44 @@ class Logon(Frame):
                 tkMessageBox.showerror('Error', 'Incorrect password')
         else:
             tkMessageBox.showerror('Error', 'No such user')
+            
+class FirstRun(Dialog):
+    def build(self):
+        self.firstrun_frame = LabelFrame(self, text='Create admin password', **pad5)
+        
+        self.instruction_lbl = Label(self.firstrun_frame, text='It appears that this is the ' +
+                                     'first time you have launched Spellathon.' +
+                                     ' In order to manage users and word lists,' +
+                                     ' you will need to create an administrator' +
+                                     ' account. Make sure you take note' +
+                                     ' of the username and password, because it will not' +
+                                     ' be recoverable.', wraplength=300, justify=LEFT)
+        
+        self.new_user_btn = Button(self.firstrun_frame, text="New administrative user", command=self.master.new_user)
+        
+        self.um = database.get_user_manager()
+        self.um.add_listener(self)
+        self.admin_made = False
+        
+    def arrange(self):
+        self.firstrun_frame.grid(sticky='nswe', **pad5)
+        self.instruction_lbl.grid(column=0, row=0, **pad2)
+        self.new_user_btn.grid(column=0, row=1, **pad2)
+                    
+    def validate(self):
+        return self.admin_made
+    
+    def apply(self):
+        cfg = open('.config', 'w')
+        cfg.write('admin=' + self.user.username)
+        cfg.close
+        
+    def user_added(self, user):
+        self.user = user
+        self.admin_made = True
+        self.ok()
 
-class NewUser(Dialog):        
+class NewUser(Dialog):
     def build(self):
         self.register_frame = LabelFrame(self, text='New user', **pad5)
         
@@ -329,7 +479,7 @@ class NewUser(Dialog):
             return False
         
         self.user = User(username, realname, password, dob, photo)
-        self.um = UserManager()
+        self.um = database.get_user_manager()
         
         if not self.um.add_user(self.user):
             tkMessageBox.showerror('Error', 'A user with that username already exists.')
@@ -340,39 +490,7 @@ class NewUser(Dialog):
     def apply(self):
         self.um.commit()
         tkMessageBox.showinfo('User added', 'User ' + self.user.username + ' added successfully.')
-            
-class Authoriser(Dialog):
-    def build(self):
-        self.authority_frame = LabelFrame(self, text='Provide authority', **pad5)
-        self.password_lbl = Label(self.authority_frame, text='Enter administrator password:')
-        self.password_ebx = Entry(self.authority_frame, show='*', width=25)
-        
-    def arrange(self):
-        self.password_lbl.grid(sticky='w', **pad2)
-        self.password_ebx.grid(sticky='we', **pad2)
-        self.authority_frame.grid(column=0, row=0, sticky='we', **pad5)
-        
-class CreateAdmin(Dialog):
-    def build(self):
-        self.frame = LabelFrame(self, text='Create administrator', **pad5)
-        self.info_lbl = Label(self.frame, text='Welcome to Spellathon! It appears ' + 
-                              'that you have not set an administrator ' + 
-                              'password. An administrator password is ' + 
-                              'necessary to create and manage word lists and ' + 
-                              'user records. Please set one now:', justify=LEFT, wraplength=300)
-        self.password_lbl = Label(self.frame, text='Password:')
-        self.password_confirm_lbl = Label(self.frame, text='Confirm password:')
-        self.password_ebx = Entry(self.frame, show='*')
-        self.password_confirm_ebx = Entry(self.frame, show='*')
-        
-    def arrange(self):
-        self.info_lbl.grid(row=0, sticky='w', columnspan=2, **pad2)
-        self.password_lbl.grid(column=0, row=1, sticky='w', **pad2)
-        self.password_confirm_lbl.grid(column=0, row=2, sticky='w', **pad2)
-        self.password_ebx.grid(column=1, row=1, sticky='w', **pad2)
-        self.password_confirm_ebx.grid(column=1, row=2, sticky='w', **pad2)
-        self.frame.grid(sticky='we', **pad5)
-        
+                            
 class WelcomeScreen(Frame):
     def __init__(self, user, master=None):
         Frame.__init__(self, master)
@@ -438,7 +556,7 @@ class SpellingAid(Frame):
         
     def build(self):
         
-        self.lists_frame = LabelFrame(self, text='Get started', **pad5)
+        self.lists_frame = Frame(self, **pad5)
         self.lists_lbl = Label(self.lists_frame, text='Choose a list to begin spelling!', **helv12)
         self.lists_var = StringVar()
         self.lists_opt = OptionMenu(self.lists_frame, self.lists_var, '')
@@ -484,11 +602,11 @@ class SpellingAid(Frame):
         
                 
     def arrange(self):
-        self.lists_frame.grid(column=0, row=0, sticky='we', **pad5)
+        self.lists_frame.grid(column=0, row=0, **pad5)
         
-        self.lists_lbl.grid(column=0, row=0, sticky='nswe', padx=5, pady=2)
-        self.lists_opt.grid(column=0, row=1, sticky='nswe', padx=5, pady=2)
-        self.start_spelling_btn.grid(column=1, row=0, rowspan=2, padx=5, pady=2)
+        self.lists_lbl.grid(column=1, row=0, sticky='nswe', padx=5, pady=2)
+        self.lists_opt.grid(column=1, row=1, sticky='nswe', padx=5, pady=2)
+        self.start_spelling_btn.grid(column=0, row=0, rowspan=2, padx=5, pady=2)
         
         self.word_lbl.grid(column=0, row=2, columnspan=2, sticky='nswe', padx=20, pady=2)
         self.word_ebx.grid(column=0, row=3, padx=20, pady=2)
@@ -558,7 +676,7 @@ class SpellingAid(Frame):
         self.word_ebx.config(state=DISABLED)
         self.word_submit_btn.config(state=DISABLED)
         
-        sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts, title='Spelling complete')
+        sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts)
         
         self.session = None
         
@@ -583,7 +701,7 @@ class SpellingAid(Frame):
         self.word_ebx.delete(0, END)
         
 class SpellingComplete(Dialog):
-    def __init__(self, master, listname, score, highscore, newhighscore, attempts, title=None):
+    def __init__(self, master, listname, score, highscore, newhighscore, attempts):
         self.list = listname
         self.score = score
         self.highscore = highscore
@@ -686,7 +804,6 @@ class Score(Dialog):
         for i, label in enumerate(self.list_metadata_labels):
             label.grid(column=0, row=i, sticky='w', **pad2)
         
-        j = 0
         for i, label in enumerate(self.list_metadata_fields):
             label.grid(column=1, row=i, sticky='w',  **pad2)
             

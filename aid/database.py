@@ -1,10 +1,6 @@
 '''
 Handle the word and user tables in the Spellathon database.
 
-Exported classes:
-UserManager -- Manage the user table.
-WordManager -- Manage the word table.
-
 '''
 import sqlite3 as sqlite
 import os
@@ -52,6 +48,7 @@ class _DBManager(object):
         
         # Connect to the database and create a cursor.
         self.db = sqlite.connect('spellingaid.db', detect_types = sqlite.PARSE_DECLTYPES)
+        self.db.text_factory = str
         self.c = self.db.cursor()
         
         # If the database didn't exist, initialise the tables.
@@ -66,18 +63,25 @@ class _DBManager(object):
         sqlite.register_converter('User', User.deserialise)
         sqlite.register_converter('Word', Word.deserialise)
         
+        self.listeners = []
+        
     def commit(self):
         '''Save changes made to the database and close the cursor.'''
         self.db.commit()
-        self.c.close()
         
     def discard(self):
         '''Discard changes made to the database and close the cursor.'''
         self.db.rollback()
-        self.c.close()
+        
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+        
+    def remove_listener(self, listener):
+        if listener in self.listeners:
+            self.listeners.remove(listener)
             
-class UserManager(_DBManager):
-    '''Manage user records in the database.
+class _UserManager(_DBManager):
+    '''Manage user records in the database. Singleton.
     
     Public functions:
     add_user -- Add a user to the database.
@@ -101,6 +105,7 @@ class UserManager(_DBManager):
         '''
         try:
             self.c.execute('INSERT INTO users VALUES (?, ?)', (user.username, user))
+            self.user_added(user)
             return True
         except sqlite.IntegrityError:
             return False
@@ -182,9 +187,14 @@ class UserManager(_DBManager):
             self.c.execute('DELETE FROM users WHERE username=?', (user.username,))
         except AttributeError:
             self.c.execute('DELETE FROM users WHERE username=?', (user,))
+            
+    def user_added(self, user):
+        if self.listeners:
+            for listener in self.listeners:
+                listener.user_added(user)
 
-class WordManager(_DBManager):
-    '''Manage word records in the database.
+class _WordManager(_DBManager):
+    '''Manage word records in the database. Singleton.
     
     Public functions:
     add_word -- Add a word to the database.
@@ -234,6 +244,23 @@ class WordManager(_DBManager):
         else:
             return None
         
+    def retrieve_words(self):
+        '''Retrieve all Word objects from the database.
+        
+        Returns:
+        The list of all words.
+        
+        '''
+        self.c.execute('SELECT word FROM words')
+        
+        words = []
+        
+        # Take index 0 of the row tuple, rather than returning the tuple.
+        for row in self.c:
+            words.append(row[0])
+        
+        return words
+        
     def retrieve_words_of_difficulty(self, difficulty):
         '''Retrieve all words of a given difficulty from the database.
         
@@ -267,3 +294,12 @@ class WordManager(_DBManager):
             self.c.execute('DELETE FROM words WHERE string=?', (word.word,))
         except AttributeError:
             self.c.execute('DELETE FROM words WHERE string=?', (word,))
+
+uminstance = _UserManager()
+wminstance = _WordManager()
+
+def get_user_manager():
+    return uminstance
+
+def get_word_manager():
+    return wminstance

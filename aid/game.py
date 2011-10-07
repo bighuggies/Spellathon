@@ -3,9 +3,8 @@ Created on 5/10/2011
 
 @author: andrew
 '''
-import time
 import random
-from database import UserManager
+import database
 from speech import Speech
 #from user import User
 
@@ -25,16 +24,13 @@ class Session(object):
         self.words = self.wordlist.words.keys()
         self.list_length = len(self.words)
         random.shuffle(self.words)
-
-        self.word = self.words.pop()
-        self.speech.speak(self.word)
         
-        self.update_interface()
+        self.next()
         
     def end(self):
         self.user.add_score(self.wordlist.name, self.score)
         
-        um = UserManager()
+        um = database.get_user_manager()
         um.update_user(self.user)
         um.commit()
                 

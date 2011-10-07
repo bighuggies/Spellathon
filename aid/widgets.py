@@ -126,7 +126,7 @@ class MultiScrollListbox(Frame):
         
         for i in range(0, len(self.items[0])):
             self.listboxes.append(Listbox(self, yscrollcommand=self.scrollbar.set,
-                                  selectmode='single', borderwidth=0, 
+                                  selectmode='single', borderwidth=1, 
                                   selectborderwidth=0, exportselection=0))
 
         self.scrollbar.config(command=self.on_vertical_scrollbar)
@@ -169,6 +169,9 @@ class MultiScrollListbox(Frame):
             listbox.selection_set(lindex)
 
         self.curselection = (self.listboxes[0].get(lindex))
+        
+    def get(self):
+        return self.curselection
             
     def update(self):
         for i in range(len(self.listboxes)):
@@ -177,7 +180,7 @@ class MultiScrollListbox(Frame):
             for item in self.items:
                 lol = list(item)
                 self.listboxes[i].insert(END, lol[i])
-
+                                
 class ScrollListbox(Frame):
     def __init__(self, master, items=None):
         Frame.__init__(self, master)
@@ -210,16 +213,16 @@ class ScrollListbox(Frame):
         self.listbox.insert(END, *sorted(self.items.keys()))
 
 class Dialog(Toplevel):
-    def __init__(self, parent, title=None, btncolumn=100, btnrow=100):
-        Toplevel.__init__(self, parent)
-        self.transient(parent)
+    def __init__(self, master, title=None, btncolumn=100, btnrow=100):
+        Toplevel.__init__(self, master)
+        self.transient(master)
         self.resizable(False, False)
 
         if title:
             self.title(title)
             
         self.result = None
-                    
+        
         self.build()
         self.arrange()
         self.buttonbox(btncolumn, btnrow)
@@ -232,9 +235,9 @@ class Dialog(Toplevel):
         # Handle the window being closed by the window manager
         self.protocol('WM_DELETE_WINDOW', self.cancel)
 
-        # Arrange the window relative to the parent
-        self.geometry('+%d+%d' % (parent.winfo_rootx()+50,
-                                  parent.winfo_rooty()+50))
+        # Arrange the window relative to the master
+        self.geometry('+%d+%d' % (master.winfo_rootx()+50,
+                                  master.winfo_rooty()+50))
 
         # Wait until the dialog is closed
         self.wait_window(self)
@@ -285,7 +288,7 @@ class Dialog(Toplevel):
 
     def cancel(self, event=None):
 
-        # put focus back to the parent window
+        # put focus back to the master window
         self.master.focus_set()
         self.destroy()
 
