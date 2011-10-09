@@ -49,6 +49,7 @@ class Logon(Frame):
 
     '''
     def __init__(self, master=None):
+        '''Create the logon screen.'''
         Frame.__init__(self, master)
         
         # Set the title of the root window.
@@ -221,6 +222,13 @@ class WelcomeScreen(Frame):
     '''The view that is presented to a student after they have logged in, which
     allows them to subsequently being spelling or view their scores.'''
     def __init__(self, user, master=None):
+        '''Create the welcome screen.
+        
+        Arguments:
+        user -- Keep track of the logged in user.
+        master -- Parent window.
+        
+        '''
         Frame.__init__(self, master)
         # Set the window title and bind enter to begin spelling and escape to
         # log out.
@@ -285,11 +293,25 @@ class WelcomeScreen(Frame):
             ln.pack()
 
 class SpellingAid(Frame):
+    '''Spelling aid game.
+    
+    Public functions:
+    session_ended -- Called when a spelling session has finished.
+    update -- Update the word and score interface elements.
+    
+    '''
     def __init__(self, user, master=None):
+        '''Create the Spelling Aid view.
+        
+        Arguments:
+        user -- Keep track of the logged in user.
+        master -- Parent window.
+        
+        '''
         Frame.__init__(self, master)
         self.master.title('Spellathon Spelling Aid')
-        self.master.bind('<Return>', self.submit)
-        self.master.bind('<Escape>', self.exit)
+        self.master.bind('<Return>', self._submit)
+        self.master.bind('<Escape>', self._exit)
         
         self.user = user
         self.session = None
@@ -300,7 +322,8 @@ class SpellingAid(Frame):
         self.start_spelling_btn.focus_set()
         
     def _build(self):
-        
+        '''Build the component widgets.'''
+        # Components to select the list to spell.
         self.lists_frame = Frame(self, **pad5)
         self.lists_lbl = Label(self.lists_frame, text='Choose a list to begin spelling!', **helv12)
         self.lists_var = StringVar()
@@ -308,33 +331,34 @@ class SpellingAid(Frame):
         self.lists_opt.config(anchor='w')
         self.lists_model = TLDROptionMenuModel(self.lists_opt, self.lists_var)
         
-        
+        # Button to begin a spelling session.
         self.start_spelling_img = PhotoImage(file='images/go.gif')
         self.stop_spelling_img = PhotoImage(file='images/stop.gif')
-        self.start_spelling_btn = Button(self.lists_frame, text='Start', command=self.start_session, 
+        self.start_spelling_btn = Button(self.lists_frame, text='Start', command=self._start_session, 
                                          image=self.start_spelling_img, compound=CENTER, font=('Helvetica', '14'), relief=FLAT)
         
-        self.word_lbl = Label(self, text='Enter the word you hear and click submit!', **helv16)
+        # Word entry widgets where the user will make spelling attempts.
+        self.word_lbl = Label(self, text='Enter the word you hear and click _submit!', **helv16)
         self.word_ebx= Entry(self, font=('Helvetica', '24'), width=30, state=DISABLED)
-        self.word_submit_img = PhotoImage(file='images/submit.gif')
+        self.word_submit_img = PhotoImage(file='images/_submit.gif')
 
-        self.example_img = PhotoImage(file='images/example.gif')
-        self.speak_img = PhotoImage(file='images/speak.gif')
-        
-        self.word_metadata = Frame(self)
-        
+        # Buttons to submit the attempt, speak the word, and speak the example.
         self.buttons = Frame(self, padx=5, pady=20)
-        
         self.word_submit_btn = Button(self.buttons, text='Submit', compound=TOP,
-                                      image=self.word_submit_img, command=self.submit, state=DISABLED, relief=FLAT, font=('Helvetica', '10'))
+                                      image=self.word_submit_img, command=self._submit, state=DISABLED, relief=FLAT, font=('Helvetica', '10'))
+        self.speak_img = PhotoImage(file='images/speak.gif')
         self.speak_again_btn = Button(self.buttons, text='Speak again', state=DISABLED,
                                       image=self.speak_img, compound=TOP, relief=FLAT, font=('Helvetica', '10'))
+        self.example_img = PhotoImage(file='images/example.gif')
         self.example_btn = Button(self.buttons, text='Example', state=DISABLED,
                                   image=self.example_img, compound=TOP, relief=FLAT, font=('Helvetica', '10'))
         
+        # Word metadata labels.
+        self.word_metadata = Frame(self)
         self.word_definition_lbl = Text(self.word_metadata, height=5, state=DISABLED, font=('Helvetica', '10'))
         self.definition_lbl= Label(self.word_metadata, text='Definition:', **helv12)
         
+        # Score information.
         self._score_frame = LabelFrame(self, text='Score', **pad5)
         self.score_lbl = Label(self._score_frame, text='Score:', **helv12)
         self.current_score_lbl= Label(self._score_frame, text='0/0', **helv16)
@@ -343,10 +367,11 @@ class SpellingAid(Frame):
         self.score_elements = [self.score_lbl, self.current_score_lbl,
                                self.high_score_lbl, self.current_high_score_lbl]
         
-        self.exit_btn= Button(self, text='Exit', command=self.exit)
-        
-                
+        # Exit button.
+        self.exit_btn= Button(self, text='Exit', command=self._exit)
+            
     def _arrange(self):
+        '''Place the widgets within the frame.'''
         self.lists_frame.grid(column=0, row=0, **pad5)
         
         self.lists_lbl.grid(column=1, row=0, sticky='nswe', padx=5, pady=2)
@@ -372,63 +397,118 @@ class SpellingAid(Frame):
         self.speak_again_btn.grid(column=0, row=0, sticky='nswe', **pad2)
         self.example_btn.grid(column=1, row=0, sticky='nswe', **pad2)
         
-    def exit(self, *args):
-        if tkMessageBox.askokcancel('Exit', 'Are you sure you want to exit? Your progress will be saved.'):
+    def _exit(self, *args):
+        '''End the session and return to the welcome screen.'''
+        if tkMessageBox.askokcancel('Exit', 'Are you sure you want to _exit? Your progress will be saved.'):
             if self.session:
-                self.end_session()
+                # If there was an ongoing session, end it.
+                self._end_session()
             
+            # Create the welcome screen, destroy this view, show the welcome
+            # screen.
             ws = WelcomeScreen(self.user, master=self.master)
             self.destroy()
             ws.pack()
         
-    def start_session(self):
+    def _start_session(self):
+        '''Begin a spelling session when the 'start spelling' button is
+        pressed.'''
         if self.lists_model.get_list():
-            self.start_spelling_btn.config(text='Stop', command=self.end_session, image=self.stop_spelling_img)
-
+            # Change 'start spelling' button to 'stop spelling' button.
+            self.start_spelling_btn.config(text='Stop', command=self._end_session, image=self.stop_spelling_img)
+            
+            # Begin a spelling session.
             self.session = Session(self, self.lists_model.get_list(), self.user)
             
+            # Enable the speech buttons.
             self.speak_again_btn.config(command=self.session.speak_word)
             self.example_btn.config(command=self.session.speak_example)
             
+            # Disable the list selection optionmenu while spelling is ongoing.
             self.lists_opt.config(state=DISABLED)
             
+            # Enable all the spelling aid controls.
             self.speak_again_btn.config(state=NORMAL)
             self.example_btn.config(state=NORMAL)
             self.word_ebx.config(state=NORMAL)
             self.word_submit_btn.config(state=NORMAL)
             
+            # Set the focus to the submission box and start the session.
             self.word_ebx.focus_set()
             self.session.start()
         else:
+            # If no word lists have been created, show an error.
             tkMessageBox.showerror('Error', 'There are no word lists! Get your teacher to make some for you!')
         
-    def end_session(self):
+    def _end_session(self):
+        '''End the session. If the session ends successfully, session_ended will
+        be called.'''
         self.session.end()
-        
-    def session_ended(self, score, highscore, newhighscore, attempts):
-        self.start_spelling_btn.config(text='Start', command=self.start_session, image=self.start_spelling_img)
-        self.current_score_lbl.config(text='0/0')
-        self.current_high_score_lbl.config(text='n/a')
+    
+    def _submit(self, *args):
+        '''Submit the attempt to be checked and empty the submission box.'''
+        self.session.check(self.word_ebx.get())
         self.word_ebx.delete(0, END)
         
+    def session_ended(self, score, highscore, newhighscore, attempts):
+        '''Called when a session has ended. Return the interface to a non-active
+        state.
+        
+        Arguments:
+        score -- The score achieved during the session (no. correct attempts).
+        highscore -- The high score of the user for this list.
+        newhighscore -- Boolean representing whether or not a new high score was
+        set.
+        attempts -- The submissions made by the user during the spelling
+        session.
+        
+        '''
+        # 'Stop spelling' button becomes 'start spelling' button.
+        self.start_spelling_btn.config(text='Start', command=self._start_session, image=self.start_spelling_img)
+        
+        # Score information is reset.
+        self.current_score_lbl.config(text='0/0')
+        self.current_high_score_lbl.config(text='n/a')
+        
+        # Word submission box is cleared.
+        self.word_ebx.delete(0, END)
+        
+        # Have to enable the word definition text box in order to clear it, then
+        # it is disabled again.
         self.word_definition_lbl.config(state=NORMAL)
         self.word_definition_lbl.delete(1.0, END)
         self.word_definition_lbl.config(state=DISABLED)
         
-        self.word_lbl.config(text='Enter the word you hear and click submit!', fg='black')
+        # Reset the instruction label.
+        self.word_lbl.config(text='Enter the word you hear and click _submit!', fg='black')
         
+        # Enable the list selection option menu.
         self.lists_opt.config(state=NORMAL)
         
+        # Disable the spelling aid controls.
         self.speak_again_btn.config(state=DISABLED)
         self.example_btn.config(state=DISABLED)
         self.word_ebx.config(state=DISABLED)
         self.word_submit_btn.config(state=DISABLED)
         
+        # Show the statistics from the completed session.
         sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts)
         
         self.session = None
         
     def update(self, definition, score, highscore, correct):
+        '''Update the score information and word metadata. Usually called after
+        a submission when a new word is available to spell.
+        
+        Arguments:
+        definition -- The definition of the new word being spelled.
+        score -- The current score of the user for the session.
+        highscore -- The current high score of the user for the list.
+        correct -- Boolean representing whether or not the previous submission
+        was correct.
+        '''
+        # Have to enable the text box to update it and then disable it again to
+        # prevent users typing in it.
         self.word_definition_lbl.config(state=NORMAL)
         self.word_definition_lbl.delete(1.0, END)
         self.word_definition_lbl.insert(END, definition)
@@ -442,11 +522,7 @@ class SpellingAid(Frame):
         elif correct == False:
             self.word_lbl.config(text='Better luck next time', fg='red')
         elif correct == None:
-            self.word_lbl.config(text='Enter the word you hear and click submit!', fg='black')
-        
-    def submit(self, *args):
-        self.session.check(self.word_ebx.get())
-        self.word_ebx.delete(0, END)
+            self.word_lbl.config(text='Enter the word you hear and click _submit!', fg='black')
 
 class SpellingComplete(Dialog):
     def __init__(self, master, listname, score, highscore, newhighscore, attempts):
@@ -691,7 +767,7 @@ class NewList(Dialog):
         
         return True
         
-    def apply(self):
+    def _apply(self):
         name = self.name_ebx.get()
         author = self.author_ebx.get()
         path = 'wordlists/' + name + '.tldr'
@@ -833,7 +909,7 @@ class ListEdit(Dialog):
     def _validate(self):
         return tkMessageBox.askokcancel('Save new list', 'Save changes to ' + self.listname + '?')
     
-    def apply(self):
+    def _apply(self):
         self.destination_model.save()
         self.master.list_model.update_items()
 
@@ -884,7 +960,7 @@ class NewWord(Dialog):
 
         return True
     
-    def apply(self):
+    def _apply(self):
         word = Word(self.word_ebx.get(), self.definition_ebx.get(1.0, END).strip(), self.example_ebx.get(1.0, END).strip(), self.difficulty_var.get())
         self.model.add_word(word)
             
@@ -1012,7 +1088,7 @@ class NewUser(Dialog):
         
         return tkMessageBox.askyesno('New user', 'Create user ' + username + '?')
         
-    def apply(self):
+    def _apply(self):
         self.um.commit()
         tkMessageBox.showinfo('User added', 'User ' + self.user.username + ' added successfully.')
 
