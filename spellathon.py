@@ -19,7 +19,7 @@ def check_festival():
         p.stdin.write('(SayText "Welcome to spell a thon!")')
         p.stdin.close()
     except OSError:
-        tkMessageBox.showerror('Error', 'You do not have festival installed.' +
+        tkMessageBox.showerror('Error', 'You do not have festival installed. ' +
                                'Please install festival and launch again.')
         return False
     
