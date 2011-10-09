@@ -1,5 +1,5 @@
 '''
-Module to _build each view and manage behaviour of the Spellathon application.
+Module to build each view and manage behaviour of the Spellathon application.
 
 Exported classes:
 
@@ -737,7 +737,7 @@ class ListEdit(Dialog):
         self.destination_lbl = Label(self.destination_frame, text='List contents:')
         self.destination_lbx = ScrollListbox(self.destination_frame)
         self.destination_filter_var = StringVar()
-        self.destination_filter_ebx = Entry(self.destination_frame)
+        self.destination_filter_ebx = Entry(self.destination_frame, textvariable=self.destination_filter_var)
         
         self.destination_model = WordDestinationModel(self, self.listname, self.destination_lbx, self.destination_filter_ebx, self.destination_filter_var)
         

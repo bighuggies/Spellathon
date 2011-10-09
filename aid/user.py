@@ -10,7 +10,7 @@ import pickle
 import shutil
 
 class User(object):
-    '''Represents a user and keeps track of their scores
+    '''Represents a user and keeps track of their scores.
     
     Public functions:
     serialise -- Return a string representation of this object for storage.

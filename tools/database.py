@@ -81,7 +81,7 @@ class _DBManager(object):
             self.listeners.remove(listener)
             
 class _UserManager(_DBManager):
-    '''Manage user records in the database. Singleton.
+    '''A singleton to manage user records in the database.
     
     Public functions:
     add_user -- Add a user to the database.
@@ -194,7 +194,7 @@ class _UserManager(_DBManager):
                 listener.user_added(user)
 
 class _WordManager(_DBManager):
-    '''Manage word records in the database. Singleton.
+    '''A singleton to manage word records in the database.
     
     Public functions:
     add_word -- Add a word to the database.
@@ -295,11 +295,14 @@ class _WordManager(_DBManager):
         except AttributeError:
             self.c.execute('DELETE FROM words WHERE string=?', (word,))
 
+# Keep track of the instances of the database managers.
 uminstance = _UserManager()
 wminstance = _WordManager()
 
 def get_user_manager():
+    '''Return the user manager instance.'''
     return uminstance
 
 def get_word_manager():
+    '''Return the word manager instance.'''
     return wminstance

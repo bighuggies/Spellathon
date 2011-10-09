@@ -27,12 +27,12 @@ class Word(object):
         self.difficulty = difficulty
         
     def serialise(self):
-        '''Return a string which represents a word in the TLDR format.'''
+        '''Return a string which represents a word in the tldr format.'''
         return ('{word}|{definition}|{example}|{difficulty}'.format(**self.__dict__)).encode('utf-8')
                 
     @classmethod
     def deserialise(cls, line):
-        '''Take a string of TLDR format and create a Word representation.'''
+        '''Take a string in tldr format and create a Word representation.'''
         return cls(*line.split('|'))
             
     def __str__(self):
