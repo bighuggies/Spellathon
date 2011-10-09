@@ -399,7 +399,7 @@ class SpellingAid(Frame):
         
     def _exit(self, *args):
         '''End the session and return to the welcome screen.'''
-        if tkMessageBox.askokcancel('Exit', 'Are you sure you want to _exit? Your progress will be saved.'):
+        if tkMessageBox.askokcancel('Exit', 'Are you sure you want to exit? Your progress will be saved.'):
             if self.session:
                 # If there was an ongoing session, end it.
                 self._end_session()
