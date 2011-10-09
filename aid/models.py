@@ -26,7 +26,7 @@ class UserListModel(object):
     Public functions:
     update_items -- Get the users from the database and display them in the
     listbox.
-    delete_user -- Remove a user from the list.
+    _delete_user -- Remove a user from the list.
     listbox_select -- React to a user being selected in the listbox.
     
     '''
@@ -64,7 +64,7 @@ class UserListModel(object):
         # Tell the listbox to update itself.
         self.listbox.update()
         
-    def delete_user(self):
+    def _delete_user(self):
         '''Remove the selected user from the list.'''
         if tkMessageBox.askokcancel('Delete user', 'Delete the selected user?'):
             self.um.remove_user(self.listbox.get())
@@ -82,10 +82,10 @@ class WordDestinationModel(object):
     
     Public functions:
     listbox_select -- Update the view's word metadata when a word is selected.
-    add_word -- Add a word to the list.
+    _add_word -- Add a word to the list.
     add_words -- Add a bunch of words to the list.
-    remove_word -- Remove the currently selected word from the list.
-    remove_all_words -- Remove all the words from the list.
+    _remove_word -- Remove the currently selected word from the list.
+    _remove_all_words -- Remove all the words from the list.
     save -- Write all the words in the list to disk, creating a new tldr file.
     filter_listbox -- Update the list to show words that match the filter.
     
@@ -122,9 +122,9 @@ class WordDestinationModel(object):
         '''Update the view's word metadata when a word is selected.'''
         self.interface.update_metadata(word)
         
-    def add_word(self, word):
+    def _add_word(self, word):
         '''Add a word to the list.'''
-        self.wordlist.add_word(word)
+        self.wordlist._add_word(word)
         # Update the list of words according to the filter.
         self.filter_listbox()
         
@@ -134,13 +134,13 @@ class WordDestinationModel(object):
         # Update the list of words according to the filter.
         self.filter_listbox()
             
-    def remove_word(self, word):
+    def _remove_word(self, word):
         '''Remove a word from the list.'''
         self.wordlist.del_word(word)
         self.listbox.delete(word)
         self.interface.reset_metadata()
         
-    def remove_all_words(self):
+    def _remove_all_words(self):
         '''Remove all words from the list.'''
         # Only remove those words which are currently visible in the list.
         for word in self.listbox.items.keys():

@@ -43,7 +43,7 @@ class WordList(object):
     '''Manages lists of words.
 
     Public functions:
-    add_word -- Adds a word to the list of words.
+    _add_word -- Adds a word to the list of words.
     del_word -- Deletes a word from the list of words.
     get_word -- Gets a word from the list of words.
 
@@ -67,7 +67,7 @@ class WordList(object):
         else:
             self.words = {}
         
-    def add_word(self, word):
+    def _add_word(self, word):
         '''Add a word to the list of words.
         
         Arguments:

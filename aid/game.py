@@ -72,10 +72,10 @@ class Session(object):
     def next(self):
         '''Gets the next word to spell.'''
         try:
-            # Try to get the next word from the list of words and speak it. Then
+            # Try to get the next word from the list of words and _speak it. Then
             # update the interface.
             self.word = self.words.pop()
-            self.speech.speak(self.word)
+            self.speech._speak(self.word)
             self.update_interface()
         except IndexError:
             # If there are no more words, end the session.
@@ -86,13 +86,13 @@ class Session(object):
         # If festival was already speaking, kill it.
         self.speech.kill()
         
-        self.speech.speak(self.wordlist.words[self.word].example)
+        self.speech._speak(self.wordlist.words[self.word].example)
     
     def speak_word(self):
         '''Speak the current word.'''
         # If festival was already speaking, kill it.
         self.speech.kill()
-        self.speech.speak(self.word)
+        self.speech._speak(self.word)
     
     def update_interface(self):
         '''Tells the interface to update on a new word.'''

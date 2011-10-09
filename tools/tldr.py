@@ -39,7 +39,7 @@ def parse_tldr(tldrfile, listname = 'default'):
         # All other lines which are not comment lines are words, so add the word
         # to the wordlist.
             word = Word.deserialise(line)
-            wordlist.add_word(word)
+            wordlist._add_word(word)
     
     return wordlist
 

@@ -197,14 +197,14 @@ class _WordManager(_DBManager):
     '''A singleton to manage word records in the database.
     
     Public functions:
-    add_word -- Add a word to the database.
+    _add_word -- Add a word to the database.
     retrieve_word -- Find and return individual Word objects.
     retrieve_words_of_difficulty -- Retrieve a list of 
     all words of a given difficulty.
-    remove_word -- Remove a given word.
+    _remove_word -- Remove a given word.
     
     '''
-    def add_word(self, word):
+    def _add_word(self, word):
         '''Add a given word to the database.
         
         Arguments:
@@ -283,7 +283,7 @@ class _WordManager(_DBManager):
         
         return words
    
-    def remove_word(self, word):
+    def _remove_word(self, word):
         '''Remove a given word from the database.
         
         Arguments:

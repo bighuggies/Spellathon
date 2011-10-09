@@ -15,14 +15,14 @@ class Speech(object):
     """Takes strings and converts them to audio (speech).
     
     Public functions:
-    speak -- Given a string, speak it out loud
+    _speak -- Given a string, _speak it out loud
     kill -- Stop all currently running speech processes
         
     """            
     def __init__(self):
         self.procs = []
 
-    def speak(self, text):
+    def _speak(self, text):
         """
         Open a festival subprocess which will have a new session id, send the
         text to be spoken to festival, and add the subprocess to a list of
