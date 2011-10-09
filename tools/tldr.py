@@ -3,10 +3,10 @@ Module containing functions to generate and parse TLDR format files containing
 lists of words.
 
 '''
-
 from aid.words import Word, WordList
 import datetime
 import glob
+import os
 
 def parse_tldr(tldrfile, listname = 'default'):
     '''Gets each line from a tldr file and parses it into a WordList
@@ -111,8 +111,18 @@ def generate_empty_tldr(path, name, author):
     author -- The author of the word list.
 
     '''
-    f = open(path, 'w')
-    
+    try:
+        f = open(path, 'w')
+    except IOError:
+        whole = path.split('/')[0:-1]
+        
+        dir = ""
+        for s in whole:
+            dir = dir + s
+            
+        os.mkdir(dir)
+        f = open(path, 'w')
+        
     f.write('#' + author + '\n')
     f.write('#' + str(datetime.datetime.now()) + '\n')
     f.write('#0')

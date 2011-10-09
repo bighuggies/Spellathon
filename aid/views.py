@@ -340,13 +340,13 @@ class SpellingAid(Frame):
         # Word entry widgets where the user will make spelling attempts.
         self.word_lbl = Label(self, text='Enter the word you hear and click _submit!', **helv16)
         self.word_ebx= Entry(self, font=('Helvetica', '24'), width=30, state=DISABLED)
-        self.word_submit_img = PhotoImage(file='images/_submit.gif')
+        self.word_submit_img = PhotoImage(file='images/submit.gif')
 
         # Buttons to submit the attempt, _speak the word, and _speak the example.
         self.buttons = Frame(self, padx=5, pady=20)
         self.word_submit_btn = Button(self.buttons, text='Submit', compound=TOP,
                                       image=self.word_submit_img, command=self._submit, state=DISABLED, relief=FLAT, font=('Helvetica', '10'))
-        self.speak_img = PhotoImage(file='images/_speak.gif')
+        self.speak_img = PhotoImage(file='images/speak.gif')
         self.speak_again_btn = Button(self.buttons, text='Speak again', state=DISABLED,
                                       image=self.speak_img, compound=TOP, relief=FLAT, font=('Helvetica', '10'))
         self.example_img = PhotoImage(file='images/example.gif')
@@ -808,7 +808,8 @@ class ListManagement(Frame):
     def import_list(self):
         '''Open a file dialog to find a list to import.'''
         listfile = tkFileDialog.askopenfilename(filetypes=[('tldr files', '.tldr')])
-        self.list_model.import_list(listfile)
+        if listfile != "":
+            self.list_model.import_list(listfile)
 
 class NewList(Dialog):
     '''Dialog where new list information is given by the user.'''

@@ -338,6 +338,9 @@ class TLDRMultiScrollListbox(object):
             shutil.copy(listfile, 'wordlists/')
             # Add the list
             self.update_items()
+        except IOError:
+            os.mkdir('wordlists/')
+            self.import_list(listfile)
         except Exception:
             tkMessageBox.showerror('Error', 'Either no file was selected or that list already exists.')
         

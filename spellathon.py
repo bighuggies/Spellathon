@@ -42,7 +42,6 @@ def check_files():
         # account.
         if not um.retrieve_user(admin):
             os.remove('.config')
-            print 'Removed cfg'
     except IOError:
         # If the config doesn't exist, we don't care because the logon screen
         # will prompt the user to create an admin account.
