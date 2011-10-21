@@ -220,7 +220,7 @@ class Logon(Frame):
         
 class WelcomeScreen(Frame):
     '''The view that is presented to a student after they have logged in, which
-    allows them to subsequently being spelling or view their _scores.'''
+    allows them to subsequently being spelling or view their scores.'''
     def __init__(self, user, master=None):
         '''Create the welcome screen.
         
@@ -338,7 +338,7 @@ class SpellingAid(Frame):
                                          image=self.start_spelling_img, compound=CENTER, font=('Helvetica', '14'), relief=FLAT)
         
         # Word entry widgets where the user will make spelling attempts.
-        self.word_lbl = Label(self, text='Enter the word you hear and click _submit!', **helv16)
+        self.word_lbl = Label(self, text='Enter the word you hear and click submit!', **helv16)
         self.word_ebx= Entry(self, font=('Helvetica', '24'), width=30, state=DISABLED)
         self.word_submit_img = PhotoImage(file='images/submit.gif')
 
@@ -480,7 +480,7 @@ class SpellingAid(Frame):
         self.word_definition_lbl.config(state=DISABLED)
         
         # Reset the instruction label.
-        self.word_lbl.config(text='Enter the word you hear and click _submit!', fg='black')
+        self.word_lbl.config(text='Enter the word you hear and click submit!', fg='black')
         
         # Enable the list selection option menu.
         self.lists_opt.config(state=NORMAL)
@@ -522,7 +522,7 @@ class SpellingAid(Frame):
         elif correct == False:
             self.word_lbl.config(text='Better luck next time', fg='red')
         elif correct == None:
-            self.word_lbl.config(text='Enter the word you hear and click _submit!', fg='black')
+            self.word_lbl.config(text='Enter the word you hear and click submit!', fg='black')
 
 class SpellingComplete(Dialog):
     '''Summary of the students performance after a spelling session.'''
@@ -619,7 +619,7 @@ class Score(Dialog):
         '''Create the dialog.
         
         Arguments:
-        user -- User whose _scores to look up.
+        user -- User whose scores to look up.
         master -- Parent window.
         title -- Title of the dialog window.
         
@@ -1134,7 +1134,7 @@ class UserManagement(Frame):
         # User controls.
         self.new_user_btn = Button(self.manage_users_frame, text='New user', command=self._new_user)
         self.delete_user_btn = Button(self.manage_users_frame, text='Delete user', command=self._delete_user)
-        self.user_score_btn = Button(self.manage_users_frame, text='View _scores', command=self._scores)
+        self.user_score_btn = Button(self.manage_users_frame, text='View scores', command=self._scores)
         
         self.controls = [self.new_user_btn, self.delete_user_btn,
                          self.user_score_btn]
