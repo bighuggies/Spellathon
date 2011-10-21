@@ -24,6 +24,7 @@ import hashlib
 import tkFileDialog
 import random
 import tools.database as database
+import tools.config as config
 from widgets import Dialog, ScrollListbox, TabBar, MultiScrollListbox, DateEntry
 from models import *
 from tools.speech import Speech
@@ -40,6 +41,62 @@ pad5 = {'padx' : 5, 'pady' : 5}
 helv12 = {'font' : ('Helvetica', 12)}
 helv16 = {'font' : ('Helvetica', 16)}
 difficulties = ['CL1', 'CL2', 'CL3', 'CL4', 'CL5', 'CL6', 'CL7', 'CL8', 'AL1', 'AL2']
+
+class Initial(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        
+        self.master.title("Welcome to Spellathon")
+        self.admin_created = False
+        
+        if not config.get_admin():
+            self.um = database.get_user_manager()
+            self._build()
+            self._arrange()
+            self.new_admin_btn.focus_set()
+            self.master.bind('<Return>', self._new_admin)
+            self.pack()
+        else:
+            self._logon()
+        
+    def _build(self):
+        self.info_frame = LabelFrame(self, text='First run')
+        self.info_lbl = Label(self.info_frame, text='It appears that this is the' +
+                       ' first time you have launched Spellathon.' +
+                       ' In order to manage users and word lists,' +
+                       ' you will need to create an administrator' +
+                       ' account. Make sure you take note' +
+                       ' of the username and password, because' +
+                       ' it will not be recoverable.', wraplength=300, justify=LEFT)
+        self.new_admin_btn = Button(self.info_frame, text='Create Administrator',
+                                    command=self._new_admin)
+        
+    def _arrange(self):
+        self.info_frame.grid(**pad5)
+        self.info_lbl.grid(**pad2)
+        self.new_admin_btn.grid(**pad2)
+                    
+    def _new_admin(self):
+        '''Prompt the user to create a new admin and listen for completion.'''        
+        # Begin listening for account creation.
+        self.um.add_listener(self)
+        # Prompt the user to create the admin account.
+        while self.admin_created == False:
+            nu = NewUser(self, btncolumn=0, title='New administrator')
+        # Stop listening for account creation, so that future accounts which may
+        # be created do not get set as admin accounts.
+        self.um.remove_listener(self)
+        self._logon()
+        
+    def user_added(self, user):
+        config.set_admin(user)
+        self.admin_created = True
+        
+    def _logon(self):
+        self.master.unbind('<Return>')
+        logon = Logon(self.master)
+        self.destroy()
+        logon.pack()
 
 class Logon(Frame):
     '''Initial screen of the application where users log on.
@@ -65,13 +122,11 @@ class Logon(Frame):
         # Get access to the user database to let the class validate log on
         # attempts.
         self.um = database.get_user_manager()
+        self.um.add_listener(self)
         
         # Set the initial focos to the username field.              
         self.username_ebx.focus_set()
-        
-        # Check if an administrator account has been set.
-        self._check_admin()
-        
+                
     def _build(self):
         '''Create logon widgets.'''
         # Spellathon logo, header.
@@ -121,14 +176,14 @@ class Logon(Frame):
         
     def _welcome(self, user):
         '''Create the welcome frame and destroy this one.'''
+        self._destroy()
         ws = WelcomeScreen(user, master=self.master)
-        self.destroy()
         ws.pack()
                 
     def _administrate(self):
         '''Create the administration frame and destroy this one.'''
+        self._destroy()
         admin = Administration(self.master)
-        self.destroy()
         admin.pack()
 
     def _validate(self, *args):
@@ -148,22 +203,11 @@ class Logon(Frame):
                 tkMessageBox.showerror('Error', 'Incorrect password')
         else:
             tkMessageBox.showerror('Error', 'No such user')
-            
-    def _check_admin(self):
-        '''Check whether or not an administrator account has been set.'''
-        admin = self._load_admin()
-        
-        # If an admin has not been set, prompt the user to create an
-        # administrative account.
-        if admin:
-            pass
-        else:
-            self._new_admin()
-    
+                
     def _validate_admin(self):
         '''Validate administrator details.'''
         # Get the name of the admin account from the configuration file.
-        admin = self._load_admin()
+        admin = config.get_admin()
         
         # Check if an admin has been specified.
         if admin:
@@ -191,49 +235,17 @@ class Logon(Frame):
         # cancelled the initial administrator account creation process.
         else:
             self._new_admin()
-    
-    def _load_admin(self):
-        '''Load the configuration file.
-        
-        Returns:
-        The name of the administrator account.
-        
-        '''
-        try:
-            cfg = open('.config', 'r')
-            admin = cfg.readline().split('=')
-            cfg.close()
-            if admin[0] == 'admin':
-                return admin[1]
-            else:
-                return None
-        except IOError:
-            return None
             
-    def _new_admin(self):
-        '''Prompt the user to create a new admin and listen for completion.'''
-        # Tell the user what they need to do.
-        tkMessageBox.showinfo('Create Administrator', 'It appears that this is the' +
-                       ' first time you have launched Spellathon.' +
-                       ' In order to manage users and word lists,' +
-                       ' you will need to create an administrator' +
-                       ' account. Make sure you take note' +
-                       ' of the username and password, because' +
-                       ' it will not be recoverable.')
-        
-        # Begin listening for account creation.
-        self.um.add_listener(self)
-        # Prompt the user to create the admin account.
-        nu = NewUser(self, btncolumn=0, title='New administrator')
-        # Stop listening for account creation, so that future accounts which may
-        # be created do not get set as admin accounts.
+    def _destroy(self):
+        '''Perform necessary cleanup on the destruction of this widget.'''
+        self.master.unbind('<Return>')
         self.um.remove_listener(self)
-
+        self.destroy()
+                
     def user_added(self, user):
-        '''Save the administrator account name to a configuration file.'''
-        cfg = open('.config', 'w')
-        cfg.write('admin=' + user.username)
-        cfg.close
+        '''Populate the username entrybox with the created user name.'''
+        self.username_ebx.delete(0, END)
+        self.username_ebx.insert(END, user.username)
         
 class WelcomeScreen(Frame):
     '''The view that is presented to a student after they have logged in, which
@@ -280,12 +292,12 @@ class WelcomeScreen(Frame):
     def _arrange(self):
         '''Arrange the widgets.'''
         self.welcome_frame.grid(**pad5)
-        self.welcome_lbl.grid(**pad2)
-        self.spelling_btn.grid(sticky='we', **pad2)
-        self.score_btn.grid(sticky='we', **pad2)
-        self.logout_btn.grid(sticky='we', **pad5)
+        self.welcome_lbl.grid(column=0, row=0, columnspan=2, **pad2)
+        self.spelling_btn.grid(column=0, row=1, sticky='nswe', **pad2)
+        self.score_btn.grid(column=1, row=1, sticky='nswe', **pad2)
+        self.logout_btn.grid(column=0, row=2, columnspan=2, sticky='nswe', **pad5)
         
-    def _spelling_aid(self):
+    def _spelling_aid(self, *args):
         '''Create the spelling aid view and destroy this one.'''
         sa = SpellingAid(self.user, master=self.master)
         self.destroy()
@@ -327,7 +339,7 @@ class SpellingAid(Frame):
         '''
         Frame.__init__(self, master)
         self.master.title('Spellathon Spelling Aid')
-        self.master.bind('<Return>', self._submit)
+        self.master.bind('<Return>', self._start_session)
         self.master.bind('<Escape>', self._exit)
         
         self.user = user
@@ -427,7 +439,7 @@ class SpellingAid(Frame):
             self.destroy()
             ws.pack()
         
-    def _start_session(self):
+    def _start_session(self, *args):
         '''Begin a spelling session when the 'start spelling' button is
         pressed.'''
         if self.lists_model.get_list():
@@ -452,6 +464,10 @@ class SpellingAid(Frame):
             
             # Set the focus to the submission box and start the session.
             self.word_ebx.focus_set()
+            
+            # Bind return to submitting a word.
+            self.master.bind('<Return>', self._submit)
+            
             self.session.start()
         else:
             # If no word lists have been created, show an error.
@@ -510,6 +526,9 @@ class SpellingAid(Frame):
         
         # Show the statistics from the completed session.
         sc = SpellingComplete(self, self.lists_model.get_list_name(), score, highscore, newhighscore, attempts)
+        
+        # Bind return to begin session button.
+        self.master.bind('<Return>', self._start_session)
         
         self.session = None
         
@@ -705,7 +724,10 @@ class Score(Dialog):
             length += len(key)
         
         # Calculate the average word length.
-        difficulty = length/len(wordlist.words.keys())
+        if length == 0:
+            difficulty = 0
+        else:
+            difficulty = length/len(wordlist.words.keys())
         
         self.list_difficulty_lbl.config(text=str(difficulty))
         
@@ -742,13 +764,13 @@ class Administration(Frame):
         self.tabs = TabBar(self, tabs=tabs)
         
         # Create the logout button.
-        self.logout = Button(self, text="Log out", command=self._log_out)
+        self.logout = Button(self, text='Log out', command=self._log_out)
         
     def _arrange(self):
         '''Arrange the widgets. The tab bar handles arranging the user and list
         management views.'''
-        self.tabs.grid(row=0, column=0, sticky="we")
-        self.logout.grid(row=2, column=0, sticky="e", **pad5)
+        self.tabs.grid(row=0, column=0, sticky='we')
+        self.logout.grid(row=2, column=0, sticky='e', **pad5)
         
     def _log_out(self):
         '''Return to the logon screen.'''
@@ -837,7 +859,7 @@ class ListManagement(Frame):
     def import_list(self):
         '''Open a file dialog to find a list to import.'''
         listfile = tkFileDialog.askopenfilename(filetypes=[('tldr files', '.tldr')])
-        if listfile != "":
+        if listfile != '':
             self.list_model.import_list(listfile)
 
 class NewList(Dialog):
@@ -1117,15 +1139,15 @@ class NewWord(Dialog):
             
     def _validate(self):
         '''Check that a word, definition, and example were supplied.'''
-        if self.word_ebx.get() == "":
+        if self.word_ebx.get() == '':
             tkMessageBox.showerror('Error', 'Please enter a word.')
             return False
             
-        if self.definition_ebx.get(1.0, END) == "":
+        if self.definition_ebx.get(1.0, END) == '':
             tkMessageBox.showerror('Error', 'Please enter a definition.')
             return False
 
-        if self.example_ebx.get(1.0, END) == "":
+        if self.example_ebx.get(1.0, END) == '':
             tkMessageBox.showerror('Error', 'Please enter an example.')
             return False
 
@@ -1179,7 +1201,7 @@ class UserManagement(Frame):
             
     def _new_user(self):
         '''Open the new user dialog.'''
-        nu = NewUser(self, btncolumn=0, title="Add user")
+        nu = NewUser(self, btncolumn=0, title='Add user')
         # After a user has been added to the database, update the listbox items.
         self.user_model.update_items()
         
@@ -1190,7 +1212,7 @@ class UserManagement(Frame):
         
     def _scores(self):
         '''Show user scores.'''
-        sc = Score(self.user_model.user, master=self, title="Scores")
+        sc = Score(self.user_model.user, master=self, title='Scores')
 
 class NewUser(Dialog):
     '''Dialog where new user information is given by the user.'''

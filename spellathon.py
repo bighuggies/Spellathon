@@ -1,4 +1,4 @@
-from aid.views import Logon
+from aid.views import Initial
 from Tkinter import Tk
 import subprocess
 import tkMessageBox
@@ -65,8 +65,7 @@ if __name__ == '__main__':
         # Create the widgets.
         root = Tk()
         root.resizable(False, False)
-        logon = Logon(root)
-        logon.pack()
+        init = Initial(root)
 
         # Enter the mainloop and begin the program.
         root.mainloop()
