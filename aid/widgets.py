@@ -255,7 +255,11 @@ class MultiScrollListbox(Frame):
     def _on_listbox_select(self, event):
         '''React to listbox selection events.'''
         # Get the current selection and update the current selection.
-        lindex = int(event.widget.curselection()[0])
+        try:
+            lindex = int(event.widget.curselection()[0])
+        except IndexError:
+            lindex = 0
+            
         self._update_selection(lindex)
                 
     def _update_selection(self, lindex=0):

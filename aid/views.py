@@ -820,7 +820,7 @@ class ListManagement(Frame):
         if tkMessageBox.askokcancel('Delete list', 'Are you sure you want to delete ' + self.list_lbx.get() + '?'):
             self.list_model.delete()
             
-    def list_edit(self, list):
+    def list_edit(self, list=None):
         '''Open the list edit dialog.
         
         Arguments:
@@ -908,7 +908,7 @@ class ListEdit(Dialog):
         self.listname = listname
         self.word = None
         
-        Dialog.__init__(self, master, title='Edit list', btncolumn=0)
+        Dialog.__init__(self, master, title='Edit ' + listname, btncolumn=0)
     
     def _build(self):
         '''Create the list edit dialog widgets.'''
@@ -1185,7 +1185,8 @@ class UserManagement(Frame):
         
     def _delete_user(self):
         '''Remove a user.'''
-        self.user_model._delete_user()
+        if tkMessageBox.askokcancel('Delete user', 'Delete ' + self.user_lbx.get() + '?'):
+            self.user_model._delete_user()
         
     def _scores(self):
         '''Show user scores.'''

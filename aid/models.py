@@ -52,11 +52,11 @@ class UserListModel(object):
     def update_items(self):
         '''Get the users from the database and display them in the listbox.'''
         items = []
-        users = self.um.retrieve_users()
+        self.users = self.um.retrieve_users()
         
         # Build the list of tuples containing user information to pass to the
         # listbox.
-        for user in users:
+        for user in self.users:
             items.append((user.username, user.realname, user.dob))
         
         # Set the listbox items to the built list of users.
@@ -66,10 +66,9 @@ class UserListModel(object):
         
     def _delete_user(self):
         '''Remove the selected user from the list.'''
-        if tkMessageBox.askokcancel('Delete user', 'Delete the selected user?'):
-            self.um.remove_user(self.listbox.get())
-            self.update_items()
-            self.um.commit()
+        self.um.remove_user(self.listbox.get())
+        self.update_items()
+        self.um.commit()
             
     def listbox_select(self, selection, index):
         '''When a user is selected, set that user as the current focus of the
