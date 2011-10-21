@@ -13,6 +13,8 @@ object which contains the related metadata.
 
 The primary key of a user record is the username, associated with a User object
 which keeps track of the scores and details of the user.
+
+This schema is horrible but it works.
 '''
 
 INIT = '''
