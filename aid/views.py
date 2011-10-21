@@ -88,7 +88,7 @@ class Initial(Frame):
         '''Arrange the initial frame widgets.'''
         self.info_frame.grid(**pad5)
         self.info_lbl.grid(**pad2)
-        self.new_admin_btn.grid(**pad2)
+        self.new_admin_btn.grid(**pad5)
                     
     def _new_admin(self):
         '''Prompt the user to create a new admin and listen for completion.'''        
@@ -144,7 +144,7 @@ class Logon(Frame):
     def _build(self):
         '''Create logon widgets.'''
         # Spellathon logo, header.
-        self.heading_lbl = Label(self, text='SPELLATHON', **helv16)
+        self.heading_lbl = Label(self, text='SPELLATHON', font=('Helvetica', 32))
         self.logo = PhotoImage(file='images/main.gif')
         self.logo_lbl = Label(self, image=self.logo)
         
@@ -152,8 +152,8 @@ class Logon(Frame):
         self.loginframe = LabelFrame(self, text='Login', **pad5)
         self.username_lbl = Label(self.loginframe, text='Username:', width=35)
         self.password_lbl = Label(self.loginframe, text='Password:')
-        self.username_ebx = Entry(self.loginframe)
-        self.password_ebx = Entry(self.loginframe, show='*')
+        self.username_ebx = Entry(self.loginframe, **helv16)
+        self.password_ebx = Entry(self.loginframe, show='*', **helv16)
         
         # Buttons to log in, create new users, and administrate.
         self.login_btn = Button(self.loginframe, text='Login',
@@ -691,7 +691,7 @@ class Score(Dialog):
         
         # Score data
         self.list_num_words_lbl = Label(self.list_metadata, text='0', **helv16)
-        self.list_difficulty_lbl = Label(self.list_metadata, text='None', **helv16)
+        self.list_difficulty_lbl = Label(self.list_metadata, text='0', **helv16)
         self.list_num_attempts_lbl = Label(self.list_metadata, text='0', **helv16)
         self.list_high_score_lbl = Label(self.list_metadata, text='0', **helv16)
         self.list_metadata_fields = [self.list_num_words_lbl, self.list_difficulty_lbl,
@@ -729,34 +729,37 @@ class Score(Dialog):
         # Get the currently selected list from the option menu.
         wordlist = self.lists_model.get_list()
 
-        # Set the number of words label.
-        self.list_num_words_lbl.config(text=str(len(wordlist.words)))
+        if wordlist:
+            # Set the number of words label.
+            self.list_num_words_lbl.config(text=str(len(wordlist.words)))
         
-        # Calculate the total length of all words in the list.
-        length = 0
-        for key in wordlist.words.iterkeys():
-            length += len(key)
-        
-        # Calculate the average word length.
-        if length == 0:
-            difficulty = 0
-        else:
-            difficulty = length/len(wordlist.words.keys())
-        
-        self.list_difficulty_lbl.config(text=str(difficulty))
-        
-        try:
-            # Get the number of attempts the user has made at this list.
-            attempts = len(self.user._scores[wordlist.name])
-        except KeyError:
-            # If they haven't made any attempts then:
-            attempts = 0
+            # Calculate the total length of all words in the list.
+            length = 0
+            for key in wordlist.words.iterkeys():
+                length += len(key)
             
-        self.list_num_attempts_lbl.config(text=str(attempts))
-        
-        # Get the user high score.
-        highscore = self.user.high_score(wordlist.name)
-        self.list_high_score_lbl.config(text=str(highscore))
+            # Calculate the average word length.
+            if length == 0:
+                difficulty = 0
+            else:
+                difficulty = length/len(wordlist.words.keys())
+            
+            self.list_difficulty_lbl.config(text=str(difficulty))
+            
+            try:
+                # Get the number of attempts the user has made at this list.
+                attempts = len(self.user._scores[wordlist.name])
+            except KeyError:
+                # If they haven't made any attempts then:
+                attempts = 0
+                
+            self.list_num_attempts_lbl.config(text=str(attempts))
+            
+            # Get the user high score.
+            highscore = self.user.high_score(wordlist.name)
+            self.list_high_score_lbl.config(text=str(highscore))
+        else:
+            pass
 
 class Administration(Frame):
     '''Frame to hold list and user management tabs.'''
