@@ -1,12 +1,18 @@
 '''
-Created on 22/10/2011
+Handle operations performed on the .config file for Spellathon. Very fragile
+at the moment.
 
-@author: andrew
 '''
 def set_admin(user):
-        cfg = open('.config', 'w')
-        cfg.write('admin=' + user.username)
-        cfg.close
+    '''Write a line to the config file to mark an account as administrative.
+    
+    Arguments:
+    user -- The user to be marked as an admin.
+    
+    '''
+    cfg = open('.config', 'w')
+    cfg.write('admin=' + user.username)
+    cfg.close
 
 def get_admin():
     '''Load the configuration file.
