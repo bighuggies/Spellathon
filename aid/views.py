@@ -3,6 +3,7 @@ Module to build each view and manage behaviour of the Spellathon application.
 
 Exported classes:
 
+Initial -- The screen seen on the first run which prompts to create admin.
 Logon -- Initial screen of the application where users log on.
 WelcomeScreen -- First screen of the student part of the application where
 students can choose to start spelling or see their scores.
@@ -43,23 +44,35 @@ helv16 = {'font' : ('Helvetica', 16)}
 difficulties = ['CL1', 'CL2', 'CL3', 'CL4', 'CL5', 'CL6', 'CL7', 'CL8', 'AL1', 'AL2']
 
 class Initial(Frame):
+    '''Screen seen on the first run of the application which prompts the user to
+    create an administrative account in order to be able to manage lists and 
+    users.'''
     def __init__(self, master=None):
         Frame.__init__(self, master)
         
         self.master.title("Welcome to Spellathon")
-        self.admin_created = False
         
+        # If an admin has been created, go to logon. Else, prompt to create
+        # admin account.
         if not config.get_admin():
+            # Boolean to track whether or not admin created.
+            self.admin_created = False
+            # Get the user manager and begin listening for new users.
             self.um = database.get_user_manager()
+            self.um.add_listener(self)
+            # Create the frame.
             self._build()
             self._arrange()
+            # Set the focus on the new admin button and bind return to it.
             self.new_admin_btn.focus_set()
             self.master.bind('<Return>', self._new_admin)
+            # Display this frame.
             self.pack()
         else:
             self._logon()
         
     def _build(self):
+        '''Create the initial frame widgets.'''
         self.info_frame = LabelFrame(self, text='First run')
         self.info_lbl = Label(self.info_frame, text='It appears that this is the' +
                        ' first time you have launched Spellathon.' +
@@ -72,14 +85,13 @@ class Initial(Frame):
                                     command=self._new_admin)
         
     def _arrange(self):
+        '''Arrange the initial frame widgets.'''
         self.info_frame.grid(**pad5)
         self.info_lbl.grid(**pad2)
         self.new_admin_btn.grid(**pad2)
                     
     def _new_admin(self):
         '''Prompt the user to create a new admin and listen for completion.'''        
-        # Begin listening for account creation.
-        self.um.add_listener(self)
         # Prompt the user to create the admin account.
         while self.admin_created == False:
             nu = NewUser(self, btncolumn=0, title='New administrator')
@@ -89,14 +101,16 @@ class Initial(Frame):
         self._logon()
         
     def user_added(self, user):
+        '''When a user is added, write their name to the config as an admin.'''
         config.set_admin(user)
         self.admin_created = True
         
     def _logon(self):
-        self.master.unbind('<Return>')
+        '''Create the logon view and destroy this one.'''
         logon = Logon(self.master)
-        self.destroy()
         logon.pack()
+        self.master.unbind('<Return>')
+        self.destroy()
 
 class Logon(Frame):
     '''Initial screen of the application where users log on.
@@ -1309,5 +1323,3 @@ class NewUser(Dialog):
         '''Save the new user to the database.'''
         self.um.commit()
         tkMessageBox.showinfo('User added', 'User ' + self.user.username + ' added successfully.')
-
-        

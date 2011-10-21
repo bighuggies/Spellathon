@@ -377,7 +377,7 @@ class ScrollListbox(Frame):
     def delete(self, name='', item=None):
         '''Delete an entry either by name or by the associated object.
         
-        Arguments
+        Arguments:
         name -- Name of the entry to delete.
         item -- Object to delete.
         
