@@ -321,15 +321,25 @@ class TLDRMultiScrollListbox(object):
         
     def update_items(self):
         '''Parse each tldr file and display an entry for it.'''
+        wordlists = tldr.parse_tldr_files('wordlists/')
+        
+        # Keep track of which list was added.
+        new_wordlist_names = [wordlist for wordlist in wordlists.iterkeys() if 
+                              wordlist not in self.wordlists.iterkeys()]
+        
         items = []
-        self.wordlists = tldr.parse_tldr_files('wordlists/')
+        self.wordlists = wordlists
         
         # Build the list of tuples to pass to the multi column listbox widget.
         for wordlist in self.wordlists.values():
-            items.append((wordlist.name, wordlist.source, wordlist.date_edited, str(len(wordlist.words))))
+            items.append((wordlist.name, wordlist.source, wordlist.date_edited,
+                          str(len(wordlist.words))))
             
         self.listbox.items = sorted(items)
         self.listbox.update()
+        
+        # Return the names of the added lists.
+        return new_wordlist_names
         
     def import_list(self, listfile):
         '''Import a tldr file from outside the application.'''

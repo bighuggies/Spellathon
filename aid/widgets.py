@@ -253,11 +253,20 @@ class MultiScrollListbox(Frame):
         return 'break' # Cancel the original scroll.
     
     def _on_listbox_select(self, event):
-        '''Keep track of the current listbox selection.'''
+        '''React to listbox selection events.'''
+        # Get the current selection and update the current selection.
+        lindex = int(event.widget.curselection()[0])
+        self._update_selection(lindex)
+                
+    def _update_selection(self, lindex=0):
+        '''When a selection is made in a listbox, apply that selection to
+        all of the listboxes in the multi listbox widget.
+        
+        Arguments:
+        lindex -- The list index of the selection.
+        
+        '''
         try:
-            # Set the selection to the same index for every listbox.
-            lindex = int(event.widget.curselection()[0])
-            
             for listbox in self.listboxes:
                 listbox.selection_clear(0, END)
                 listbox.selection_set(lindex)
@@ -271,8 +280,7 @@ class MultiScrollListbox(Frame):
         # Notify listeners of selection.
         if self.listeners:
             for listener in self.listeners:
-                listener.listbox_select(self.curselection, index=lindex)
-        
+                listener.listbox_select(self.curselection, index=lindex)        
     def add_listener(self, listener):
         '''Add a listener to be notified of listbox selection events.
         
@@ -295,6 +303,10 @@ class MultiScrollListbox(Frame):
             for item in self.items:
                 l = list(item)
                 self.listboxes[i].insert(END, l[i])
+        
+        # Make sure that if the listbox is now empty, the curselection is set
+        # to none. Otherwise, select the first item in the updated list.
+        self._update_selection()
                                 
 class ScrollListbox(Frame):
     '''A single column scrollable listbox.

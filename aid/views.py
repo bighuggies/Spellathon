@@ -808,16 +808,28 @@ class ListManagement(Frame):
     def new_list(self):
         '''Open the new list dialog.'''
         nl = NewList(master=self, title='New list', btncolumn=0)
-        self.list_model.update_items()
+        new_lists = self.list_model.update_items()
+        
+        # If a list was created, open the list edit window to let the user
+        # add words.
+        if new_lists:         
+            self.list_edit(new_lists[0])
             
     def delete_list(self):
         '''Delete a list.'''
-        if tkMessageBox.askokcancel('Delete list', 'Are you sure you want to delete the currently selected list?'):
+        if tkMessageBox.askokcancel('Delete list', 'Are you sure you want to delete ' + self.list_lbx.get() + '?'):
             self.list_model.delete()
             
-    def list_edit(self):
-        '''Open the list edit dialog.'''
-        if self.list_lbx.get():
+    def list_edit(self, list):
+        '''Open the list edit dialog.
+        
+        Arguments:
+        list - The name of the list to be edited.
+        
+        '''
+        if list:
+            le = ListEdit(list, master=self)
+        elif self.list_lbx.get():
             le = ListEdit(self.list_lbx.get(), master=self)
         else:
             tkMessageBox.showerror('Error', 'Please select a list to edit.')
