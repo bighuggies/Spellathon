@@ -69,6 +69,9 @@ class Logon(Frame):
         # Set the initial focos to the username field.              
         self.username_ebx.focus_set()
         
+        # Check if an administrator account has been set.
+        self._check_admin()
+        
     def _build(self):
         '''Create logon widgets.'''
         # Spellathon logo, header.
@@ -146,10 +149,21 @@ class Logon(Frame):
         else:
             tkMessageBox.showerror('Error', 'No such user')
             
+    def _check_admin(self):
+        '''Check whether or not an administrator account has been set.'''
+        admin = self._load_admin()
+        
+        # If an admin has not been set, prompt the user to create an
+        # administrative account.
+        if admin:
+            pass
+        else:
+            self._new_admin()
+    
     def _validate_admin(self):
         '''Validate administrator details.'''
         # Get the name of the admin account from the configuration file.
-        admin = self._load_config()
+        admin = self._load_admin()
         
         # Check if an admin has been specified.
         if admin:
@@ -173,18 +187,12 @@ class Logon(Frame):
                 tkMessageBox.showerror('Error', 'You are not an administrator')
                 
         # If no admin has been specified, prompt the user to make an
-        # administrator account.
+        # administrator account. This is necessary in case the user accidentally
+        # cancelled the initial administrator account creation process.
         else:
-            tkMessageBox.showerror('Error', 'It appears that this is the' +
-                                   ' first time you have launched Spellathon.' +
-                                   ' In order to manage users and word lists,' +
-                                   ' you will need to create an administrator' +
-                                   ' account. Make sure you take note' +
-                                   ' of the username and password, because' +
-                                   ' it will not be recoverable.')
             self._new_admin()
     
-    def _load_config(self):
+    def _load_admin(self):
         '''Load the configuration file.
         
         Returns:
@@ -204,6 +212,15 @@ class Logon(Frame):
             
     def _new_admin(self):
         '''Prompt the user to create a new admin and listen for completion.'''
+        # Tell the user what they need to do.
+        tkMessageBox.showinfo('Create Administrator', 'It appears that this is the' +
+                       ' first time you have launched Spellathon.' +
+                       ' In order to manage users and word lists,' +
+                       ' you will need to create an administrator' +
+                       ' account. Make sure you take note' +
+                       ' of the username and password, because' +
+                       ' it will not be recoverable.')
+        
         # Begin listening for account creation.
         self.um.add_listener(self)
         # Prompt the user to create the admin account.
