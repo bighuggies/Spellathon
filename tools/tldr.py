@@ -59,7 +59,7 @@ def parse_tldr_files(path):
     # Get each tldr file in the directory and parse it into the dict of tldr
     # files to be returned.
     for t in glob.glob(path + '*.tldr'):
-        name = t.split("/")[-1].split('.')[0]
+        name = t.split(os.sep)[-1].split('.')[0]
         tldrs[name] = parse_tldr(t, name)
 
     return tldrs
@@ -114,9 +114,9 @@ def generate_empty_tldr(path, name, author):
     try:
         f = open(path, 'w')
     except IOError:
-        whole = path.split('/')[0:-1]
+        whole = path.split(os.sep)[0:-1]
         
-        dir = ""
+        dir = ''
         for s in whole:
             dir = dir + s
             
