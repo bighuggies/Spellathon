@@ -1225,7 +1225,10 @@ class UserManagement(Frame):
     def _delete_user(self):
         '''Remove a user.'''
         if tkMessageBox.askokcancel('Delete user', 'Delete ' + self.user_lbx.get() + '?'):
-            self.user_model._delete_user()
+            admin = self.user_model._delete_user()
+            
+        if not admin:
+            tkMessageBox.showerror('Error', 'Cannot delete administrator account.')
         
     def _scores(self):
         '''Show user scores.'''

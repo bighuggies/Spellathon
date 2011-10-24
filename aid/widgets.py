@@ -353,12 +353,15 @@ class ScrollListbox(Frame):
         ''''Set the current selection on a selection event and notify subscribed
         listeners.'''
         # Get the selected entry from the listbox.
-        lindex = int(event.widget.curselection()[0])
-        self.curselection = (self.listbox.get(lindex))
+        try:
+            lindex = int(event.widget.curselection()[0])
+            self.curselection = (self.listbox.get(lindex))
+        except IndexError:
+            self.curselection = None
         
         # Send a message to each listener containing the name of the entry and
         # the related object.
-        if self.listeners:
+        if self.listeners and self.curselection:
             for listener in self.listeners:
                 listener.listbox_select(self.curselection,
                                         self.items[self.curselection])

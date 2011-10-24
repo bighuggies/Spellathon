@@ -18,6 +18,7 @@ import shutil
 import os
 import tkMessageBox
 import tools.tldr as tldr
+import tools.config as config
 import tools.database as db
 
 class UserListModel(object):
@@ -66,9 +67,15 @@ class UserListModel(object):
         
     def _delete_user(self):
         '''Remove the selected user from the list.'''
-        self.um.remove_user(self.listbox.get())
-        self.update_items()
-        self.um.commit()
+        user = self.listbox.get()
+        
+        if user != config.get_admin():
+            self.um.remove_user(user)
+            self.update_items()
+            self.um.commit()
+            return True
+        
+        return False
             
     def listbox_select(self, selection, index):
         '''When a user is selected, set that user as the current focus of the
